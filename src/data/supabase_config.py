@@ -15,9 +15,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Obtém as credenciais do Supabase das variáveis de ambiente
-SUPABASE_URL = os.environ.get("SUPABASE_URL")
-SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
-
+SUPABASE_URL = "https://ldjfxeyyyxnhffobijmf.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkamZ4ZXl5eXhuaGZmb2Jpam1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzM0MDAsImV4cCI6MjA3NDgwOTQwMH0.fwBzK0FBMfNCGh6Xyajkj7D5sV9Lw4a9JIWsIqPRenk"
 # Inicializa o cliente Supabase
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 

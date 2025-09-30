@@ -11,5 +11,11 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  // Remova a configuração base: './' se estiver presente
+  base: '/crmluibambini/', // Nome do repositório
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    sourcemap: false,
+  },
 })

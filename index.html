@@ -3,12 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Lui Bambini - Análise de Tempo desde Última Compra</title>
+    <title>CRM Lui Bambini</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.38.4/dist/umd/supabase.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -21,19 +17,18 @@
             position: fixed;
             padding-top: 20px;
         }
-        .sidebar .nav-link {
-            color: #ced4da;
-            padding: 15px 20px;
-            margin-bottom: 5px;
-            border-radius: 5px;
+        .sidebar a {
+            color: #adb5bd;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
             transition: all 0.3s;
-            cursor: pointer;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
-            background-color: #2c3136;
+        .sidebar a:hover, .sidebar a.active {
             color: white;
+            background-color: #495057;
         }
-        .sidebar .nav-link i {
+        .sidebar .nav-icon {
             margin-right: 10px;
         }
         .content {
@@ -41,70 +36,45 @@
             padding: 20px;
         }
         .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
             margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         .card-header {
-            background-color: white;
+            background-color: #f8f9fa;
             border-bottom: 1px solid #e9ecef;
-            padding: 15px 20px;
-            font-weight: 600;
         }
-        .card-body {
+        .stats-card {
+            text-align: center;
             padding: 20px;
         }
-        .stat-card {
-            border-left: 4px solid;
-            padding: 15px;
-            margin-bottom: 15px;
-            background-color: white;
-            border-radius: 5px;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        .stats-card h3 {
+            margin-bottom: 0;
         }
-        .stat-card h3 {
-            margin: 0;
-            font-size: 1.5rem;
-        }
-        .stat-card p {
-            margin: 0;
+        .stats-card p {
             color: #6c757d;
         }
-        .table th {
-            font-weight: 600;
-            background-color: #f8f9fa;
+        .chart-container {
+            height: 300px;
         }
-        .badge-success {
-            background-color: #28a745;
-        }
-        .badge-warning {
-            background-color: #ffc107;
-        }
-        .badge-danger {
-            background-color: #dc3545;
-        }
-        .badge-info {
-            background-color: #17a2b8;
-        }
-        .badge-secondary {
-            background-color: #6c757d;
+        .table-container {
+            overflow-x: auto;
         }
         .upload-area {
             border: 2px dashed #ccc;
             border-radius: 5px;
-            padding: 2rem;
+            padding: 50px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
         }
         .upload-area:hover {
-            border-color: #0d6efd;
+            border-color: #007bff;
         }
         .step-indicator {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 2rem;
+            margin-bottom: 30px;
         }
         .step {
             flex: 1;
@@ -112,38 +82,19 @@
             padding: 10px;
             position: relative;
         }
-        .step::after {
+        .step.active {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .step:not(:last-child):after {
             content: '';
             position: absolute;
             top: 50%;
-            right: -50%;
+            right: 0;
             width: 100%;
             height: 2px;
             background-color: #e9ecef;
             z-index: -1;
-        }
-        .step:last-child::after {
-            display: none;
-        }
-        .step.active {
-            color: #0d6efd;
-            font-weight: bold;
-        }
-        .step.completed {
-            color: #28a745;
-        }
-        .step.active::after, .step.completed::after {
-            background-color: #0d6efd;
-        }
-        .bi-cloud-arrow-up {
-            font-size: 3rem;
-            color: #0d6efd;
-        }
-        .page-content {
-            display: none;
-        }
-        .page-content.active {
-            display: block;
         }
     </style>
 </head>
@@ -152,31 +103,31 @@
         <div class="row">
             <!-- Sidebar -->
             <div class="col-md-2 sidebar">
-                <h4 class="text-center mb-4">CRM Lui Bambini</h4>
+                <h3 class="text-center mb-4">CRM Lui Bambini</h3>
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link active" data-page="dashboard">
-                            <i class="bi bi-speedometer2"></i> Dashboard
+                        <a href="#dashboard" class="nav-link active" onclick="showPage('dashboard')">
+                            <span class="nav-icon">📊</span> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-page="clientes">
-                            <i class="bi bi-people"></i> Clientes
+                        <a href="#clientes" class="nav-link" onclick="showPage('clientes')">
+                            <span class="nav-icon">👥</span> Clientes
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-page="mensagens">
-                            <i class="bi bi-chat-dots"></i> Mensagens
+                        <a href="#mensagens" class="nav-link" onclick="showPage('mensagens')">
+                            <span class="nav-icon">💬</span> Mensagens
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-page="estatisticas">
-                            <i class="bi bi-bar-chart"></i> Estatísticas
+                        <a href="#estatisticas" class="nav-link" onclick="showPage('estatisticas')">
+                            <span class="nav-icon">📈</span> Estatísticas
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" data-page="importacao">
-                            <i class="bi bi-upload"></i> Importação
+                        <a href="#importacao" class="nav-link" onclick="showPage('importacao')">
+                            <span class="nav-icon">📥</span> Importação
                         </a>
                     </li>
                 </ul>
@@ -185,91 +136,93 @@
             <!-- Content -->
             <div class="col-md-10 content">
                 <!-- Dashboard Page -->
-                <div id="dashboard-content" class="page-content active">
+                <div id="dashboard" class="page">
                     <h2 class="mb-4">Dashboard</h2>
                     <div class="row">
                         <div class="col-md-3">
-                            <div class="stat-card" style="border-left-color: #28a745;">
+                            <div class="card stats-card">
+                                <h3>152</h3>
                                 <p>Clientes Ativos</p>
-                                <h3 id="dashboard-ativos">Carregando...</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="stat-card" style="border-left-color: #ffc107;">
-                                <p>Em Risco</p>
-                                <h3 id="dashboard-risco">Carregando...</h3>
+                            <div class="card stats-card">
+                                <h3>48</h3>
+                                <p>Clientes Inativos</p>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="stat-card" style="border-left-color: #dc3545;">
-                                <p>Inativos</p>
-                                <h3 id="dashboard-inativos">Carregando...</h3>
+                            <div class="card stats-card">
+                                <h3>23</h3>
+                                <p>Clientes em Risco</p>
                             </div>
                         </div>
                         <div class="col-md-3">
-                            <div class="stat-card" style="border-left-color: #17a2b8;">
-                                <p>Tempo Médio</p>
-                                <h3 id="dashboard-tempo-medio">Carregando...</h3>
+                            <div class="card stats-card">
+                                <h3>75</h3>
+                                <p>Dias Médios de Inatividade</p>
                             </div>
                         </div>
                     </div>
-
                     <div class="row mt-4">
-                        <div class="col-md-8">
+                        <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Distribuição por Tempo desde Última Compra
+                                    <h5>Distribuição de Clientes por Tempo de Inatividade</h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="distributionChart"></canvas>
+                                    <div class="chart-container">
+                                        <canvas id="inactivityChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Clientes que Precisam de Atenção
+                                    <h5>Clientes que Precisam de Atenção</h5>
                                 </div>
                                 <div class="card-body">
-                                    <ul class="list-group" id="clientes-atencao">
-                                        <li class="list-group-item text-center">
-                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                <span class="visually-hidden">Carregando...</span>
-                                            </div>
-                                            Carregando dados...
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-md-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    Últimas Compras
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
+                                    <div class="table-container">
+                                        <table class="table table-striped">
                                             <thead>
                                                 <tr>
-                                                    <th>Cliente</th>
-                                                    <th>Data da Última Compra</th>
-                                                    <th>Valor</th>
-                                                    <th>Dias Desde Última Compra</th>
-                                                    <th>Status</th>
+                                                    <th>Nome</th>
+                                                    <th>Última Compra</th>
+                                                    <th>Dias Inativos</th>
+                                                    <th>Ação</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="ultimas-compras">
+                                            <tbody>
                                                 <tr>
-                                                    <td colspan="5" class="text-center">
-                                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                            <span class="visually-hidden">Carregando...</span>
-                                                        </div>
-                                                        Carregando dados...
-                                                    </td>
+                                                    <td>Maria Silva</td>
+                                                    <td>15/07/2025</td>
+                                                    <td>78</td>
+                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>João Santos</td>
+                                                    <td>02/07/2025</td>
+                                                    <td>91</td>
+                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Ana Oliveira</td>
+                                                    <td>10/06/2025</td>
+                                                    <td>113</td>
+                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Carlos Pereira</td>
+                                                    <td>25/05/2025</td>
+                                                    <td>129</td>
+                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Lúcia Ferreira</td>
+                                                    <td>03/05/2025</td>
+                                                    <td>151</td>
+                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -281,65 +234,115 @@
                 </div>
 
                 <!-- Clientes Page -->
-                <div id="clientes-content" class="page-content">
+                <div id="clientes" class="page" style="display: none;">
                     <h2 class="mb-4">Clientes</h2>
                     <div class="card">
                         <div class="card-header">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <input type="text" class="form-control" id="busca-cliente" placeholder="Buscar cliente...">
+                                    <input type="text" class="form-control" placeholder="Buscar cliente...">
                                 </div>
-                                <div class="col-md-3">
-                                    <select class="form-select" id="filtro-status">
-                                        <option selected value="">Todos os Status</option>
-                                        <option value="0-30">Ativos (0-30 dias)</option>
-                                        <option value="31-60">Ativos (31-60 dias)</option>
-                                        <option value="61-90">Em Risco (61-90 dias)</option>
-                                        <option value="91-180">Em Risco Alto (91-180 dias)</option>
-                                        <option value="181-365">Inativos (181-365 dias)</option>
-                                        <option value="365+">Perdidos (>365 dias)</option>
+                                <div class="col-md-4">
+                                    <select class="form-select">
+                                        <option>Todos os clientes</option>
+                                        <option>Ativos (últimos 30 dias)</option>
+                                        <option>Ativos (31-60 dias)</option>
+                                        <option>Em risco (61-90 dias)</option>
+                                        <option>Em risco elevado (91-180 dias)</option>
+                                        <option>Inativos (181-365 dias)</option>
+                                        <option>Perdidos (mais de 365 dias)</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
-                                    <button class="btn btn-primary w-100" id="btn-filtrar-clientes">Filtrar</button>
+                                <div class="col-md-2">
+                                    <button class="btn btn-primary w-100">Filtrar</button>
                                 </div>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-hover">
+                            <div class="table-container">
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th>Nome</th>
                                             <th>CPF</th>
                                             <th>Telefone</th>
                                             <th>Última Compra</th>
-                                            <th>Dias Inativo</th>
+                                            <th>Dias Inativos</th>
                                             <th>Status</th>
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="lista-clientes">
+                                    <tbody>
                                         <tr>
-                                            <td colspan="7" class="text-center">
-                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                    <span class="visually-hidden">Carregando...</span>
-                                                </div>
-                                                Carregando dados...
+                                            <td>Maria Silva</td>
+                                            <td>123.456.789-00</td>
+                                            <td>(11) 98765-4321</td>
+                                            <td>15/07/2025</td>
+                                            <td>78</td>
+                                            <td><span class="badge bg-warning">Em risco</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">Detalhes</button>
+                                                <button class="btn btn-sm btn-primary">Mensagem</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>João Santos</td>
+                                            <td>987.654.321-00</td>
+                                            <td>(11) 91234-5678</td>
+                                            <td>02/07/2025</td>
+                                            <td>91</td>
+                                            <td><span class="badge bg-danger">Risco elevado</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">Detalhes</button>
+                                                <button class="btn btn-sm btn-primary">Mensagem</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Ana Oliveira</td>
+                                            <td>456.789.123-00</td>
+                                            <td>(11) 97654-3210</td>
+                                            <td>10/06/2025</td>
+                                            <td>113</td>
+                                            <td><span class="badge bg-danger">Risco elevado</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">Detalhes</button>
+                                                <button class="btn btn-sm btn-primary">Mensagem</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Carlos Pereira</td>
+                                            <td>789.123.456-00</td>
+                                            <td>(11) 95678-1234</td>
+                                            <td>25/05/2025</td>
+                                            <td>129</td>
+                                            <td><span class="badge bg-danger">Risco elevado</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">Detalhes</button>
+                                                <button class="btn btn-sm btn-primary">Mensagem</button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td>Lúcia Ferreira</td>
+                                            <td>321.654.987-00</td>
+                                            <td>(11) 94321-8765</td>
+                                            <td>03/05/2025</td>
+                                            <td>151</td>
+                                            <td><span class="badge bg-danger">Risco elevado</span></td>
+                                            <td>
+                                                <button class="btn btn-sm btn-info">Detalhes</button>
+                                                <button class="btn btn-sm btn-primary">Mensagem</button>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             <nav>
-                                <ul class="pagination justify-content-center" id="paginacao-clientes">
-                                    <li class="page-item disabled">
-                                        <a class="page-link" href="#" tabindex="-1">Anterior</a>
-                                    </li>
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
                                     <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="#">Próximo</a>
-                                    </li>
+                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                    <li class="page-item"><a class="page-link" href="#">Próximo</a></li>
                                 </ul>
                             </nav>
                         </div>
@@ -347,65 +350,74 @@
                 </div>
 
                 <!-- Mensagens Page -->
-                <div id="mensagens-content" class="page-content">
+                <div id="mensagens" class="page" style="display: none;">
                     <h2 class="mb-4">Mensagens Personalizadas</h2>
                     <div class="row">
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header">
-                                    Categorias de Clientes
+                                    <h5>Clientes Ativos (últimos 30 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="list-group" id="categorias-clientes">
-                                        <a href="#" class="list-group-item list-group-item-action active" data-category="ativos-recentes">
-                                            Ativos Recentes (0-30 dias)
-                                            <span class="badge bg-primary float-end" id="count-ativos-recentes">...</span>
-                                        </a>
-                                        <a href="#" class="list-group-item list-group-item-action" data-category="ativos">
-                                            Ativos (31-60 dias)
-                                            <span class="badge bg-primary float-end" id="count-ativos">...</span>
-                                        </a>
-                                        <a href="#" class="list-group-item list-group-item-action" data-category="risco">
-                                            Em Risco (61-90 dias)
-                                            <span class="badge bg-warning float-end" id="count-risco">...</span>
-                                        </a>
-                                        <a href="#" class="list-group-item list-group-item-action" data-category="risco-alto">
-                                            Em Risco Alto (91-180 dias)
-                                            <span class="badge bg-warning float-end" id="count-risco-alto">...</span>
-                                        </a>
-                                        <a href="#" class="list-group-item list-group-item-action" data-category="inativos">
-                                            Inativos (181-365 dias)
-                                            <span class="badge bg-danger float-end" id="count-inativos">...</span>
-                                        </a>
-                                        <a href="#" class="list-group-item list-group-item-action" data-category="perdidos">
-                                            Perdidos (>365 dias)
-                                            <span class="badge bg-danger float-end" id="count-perdidos">...</span>
-                                        </a>
-                                    </div>
+                                    <p>Olá <strong>{nome}</strong>, tudo bem? Passando para agradecer pela sua compra recente em nossa loja. Esperamos que esteja satisfeito(a) com os produtos. Estamos à disposição para o que precisar!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-8">
+                        <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header">
-                                    Mensagem Personalizada
+                                    <h5>Clientes Ativos (31-60 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="mb-3">
-                                        <label for="previewClient" class="form-label">Selecione um cliente para visualizar</label>
-                                        <select class="form-select" id="previewClient">
-                                            <option value="">Carregando clientes...</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Mensagem</label>
-                                        <div class="border rounded p-3 bg-light" id="messagePreview">
-                                            Selecione um cliente para visualizar a mensagem personalizada.
-                                        </div>
-                                    </div>
-                                    <button class="btn btn-primary" id="copyMessage">
-                                        <i class="bi bi-clipboard"></i> Copiar Mensagem
-                                    </button>
+                                    <p>Olá <strong>{nome}</strong>! Já faz <strong>{dias}</strong> dias desde sua última visita à Lui Bambini. Estamos com novidades que podem te interessar! Quando puder, dê uma passadinha em nossa loja. Será um prazer atendê-lo(a) novamente!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Clientes em Risco (61-90 dias)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Olá <strong>{nome}</strong>! Sentimos sua falta! Já faz <strong>{dias}</strong> dias desde sua última compra conosco. Estamos com produtos novos que combinam com seu estilo. Que tal passar na Lui Bambini esta semana? Temos condições especiais para você!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Clientes em Risco Elevado (91-180 dias)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Olá <strong>{nome}</strong>! Estamos com saudades! Faz <strong>{dias}</strong> dias que não o(a) vemos em nossa loja. Preparamos uma surpresa especial para seu retorno: 10% de desconto na próxima compra! Venha conferir as novidades da Lui Bambini!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Clientes Inativos (181-365 dias)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Olá <strong>{nome}</strong>! Quanto tempo! Já faz <strong>{dias}</strong> dias desde sua última visita à Lui Bambini. Estamos com uma coleção completamente nova que gostaríamos muito de te mostrar. Preparamos um cupom especial de 15% de desconto para celebrar seu retorno!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Clientes Perdidos (mais de 365 dias)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p>Olá <strong>{nome}</strong>! A Lui Bambini mudou muito desde sua última visita há mais de um ano! Gostaríamos muito de revê-lo(a) e mostrar todas as novidades. Como cliente especial, preparamos um cupom de 20% de desconto para seu retorno. Ficaremos muito felizes em atendê-lo(a) novamente!</p>
+                                    <button class="btn btn-primary">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
@@ -413,26 +425,30 @@
                 </div>
 
                 <!-- Estatísticas Page -->
-                <div id="estatisticas-content" class="page-content">
+                <div id="estatisticas" class="page" style="display: none;">
                     <h2 class="mb-4">Estatísticas</h2>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Distribuição de Clientes por Categoria
+                                    <h5>Distribuição de Clientes por Tempo de Inatividade</h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="clientDistributionChart"></canvas>
+                                    <div class="chart-container">
+                                        <canvas id="distributionChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    Tendência de Inatividade (Últimos 6 meses)
+                                    <h5>Tendência de Inatividade</h5>
                                 </div>
                                 <div class="card-body">
-                                    <canvas id="inactivityTrendChart"></canvas>
+                                    <div class="chart-container">
+                                        <canvas id="trendChart"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -441,28 +457,62 @@
                         <div class="col-md-12">
                             <div class="card">
                                 <div class="card-header">
-                                    Resumo por Categoria
+                                    <h5>Resumo por Categoria</h5>
                                 </div>
                                 <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-hover">
+                                    <div class="table-container">
+                                        <table class="table table-striped">
                                             <thead>
                                                 <tr>
                                                     <th>Categoria</th>
                                                     <th>Quantidade</th>
                                                     <th>Porcentagem</th>
-                                                    <th>Tempo Médio</th>
+                                                    <th>Dias Médios</th>
                                                     <th>Ação Recomendada</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="resumo-categorias">
+                                            <tbody>
                                                 <tr>
-                                                    <td colspan="5" class="text-center">
-                                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                                            <span class="visually-hidden">Carregando...</span>
-                                                        </div>
-                                                        Carregando dados...
-                                                    </td>
+                                                    <td>Ativos (últimos 30 dias)</td>
+                                                    <td>87</td>
+                                                    <td>39%</td>
+                                                    <td>15</td>
+                                                    <td>Mensagem de agradecimento</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Ativos (31-60 dias)</td>
+                                                    <td>65</td>
+                                                    <td>29%</td>
+                                                    <td>45</td>
+                                                    <td>Convite para retorno</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Em risco (61-90 dias)</td>
+                                                    <td>23</td>
+                                                    <td>10%</td>
+                                                    <td>75</td>
+                                                    <td>Oferta especial</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Em risco elevado (91-180 dias)</td>
+                                                    <td>18</td>
+                                                    <td>8%</td>
+                                                    <td>135</td>
+                                                    <td>Desconto de 10%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Inativos (181-365 dias)</td>
+                                                    <td>15</td>
+                                                    <td>7%</td>
+                                                    <td>270</td>
+                                                    <td>Desconto de 15%</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Perdidos (mais de 365 dias)</td>
+                                                    <td>15</td>
+                                                    <td>7%</td>
+                                                    <td>450</td>
+                                                    <td>Desconto de 20%</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -474,338 +524,55 @@
                 </div>
 
                 <!-- Importação Page -->
-                <div id="importacao-content" class="page-content">
+                <div id="importacao" class="page" style="display: none;">
                     <h2 class="mb-4">Importação de Planilhas</h2>
                     <div class="card">
                         <div class="card-body">
                             <div class="step-indicator">
-                                <div class="step active" id="step1">Upload</div>
-                                <div class="step" id="step2">Mapeamento</div>
-                                <div class="step" id="step3">Processamento</div>
-                                <div class="step" id="step4">Conclusão</div>
+                                <div class="step active">Upload</div>
+                                <div class="step">Mapeamento</div>
+                                <div class="step">Processamento</div>
+                                <div class="step">Conclusão</div>
                             </div>
                             
                             <!-- Step 1: Upload -->
                             <div id="step1-content">
                                 <div class="row">
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card h-100">
+                                    <div class="col-md-6">
+                                        <div class="card">
                                             <div class="card-header">
-                                                Planilha de Vendas
+                                                <h5>Planilha de Vendas</h5>
                                             </div>
                                             <div class="card-body">
                                                 <div class="upload-area" id="upload-vendas">
-                                                    <i class="bi bi-cloud-arrow-up"></i>
-                                                    <h4>Arraste e solte a planilha de vendas aqui</h4>
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="50" height="50" alt="Upload">
+                                                    <h4 class="mt-3">Arraste e solte a planilha de vendas aqui</h4>
                                                     <p>ou clique para selecionar o arquivo</p>
+                                                    <input type="file" id="file-vendas" style="display: none;" accept=".xlsx,.xls">
                                                 </div>
-                                                <input type="file" id="file-vendas" class="d-none" accept=".xlsx,.xls">
                                                 <div id="vendas-file-info" class="mt-3"></div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card h-100">
+                                    <div class="col-md-6">
+                                        <div class="card">
                                             <div class="card-header">
-                                                Planilha de Clientes
+                                                <h5>Planilha de Clientes</h5>
                                             </div>
                                             <div class="card-body">
                                                 <div class="upload-area" id="upload-clientes">
-                                                    <i class="bi bi-cloud-arrow-up"></i>
-                                                    <h4>Arraste e solte a planilha de clientes aqui</h4>
+                                                    <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="50" height="50" alt="Upload">
+                                                    <h4 class="mt-3">Arraste e solte a planilha de clientes aqui</h4>
                                                     <p>ou clique para selecionar o arquivo</p>
+                                                    <input type="file" id="file-clientes" style="display: none;" accept=".xlsx,.xls">
                                                 </div>
-                                                <input type="file" id="file-clientes" class="d-none" accept=".xlsx,.xls">
                                                 <div id="clientes-file-info" class="mt-3"></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="d-flex justify-content-between mt-3">
-                                    <button class="btn btn-secondary" disabled>Anterior</button>
-                                    <button class="btn btn-primary" id="btn-next-step1" disabled>Próximo</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 2: Mapeamento -->
-                            <div id="step2-content" style="display: none;">
-                                <div class="row">
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                Mapeamento de Colunas - Vendas
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Campo</th>
-                                                                <th>Coluna na Planilha</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="mapeamento-vendas">
-                                                            <tr>
-                                                                <td>Data</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="data">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Movimentação</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="movimentacao">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Quantidade</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="quantidade">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Total</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="total">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Cliente</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="cliente">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Vendedor</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="vendedor">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Telefone</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="telefone">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Custo de Venda</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="custo_venda">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Lucro de Venda</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="lucro_venda">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 mb-4">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                Mapeamento de Colunas - Clientes
-                                            </div>
-                                            <div class="card-body">
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm">
-                                                        <thead>
-                                                            <tr>
-                                                                <th>Campo</th>
-                                                                <th>Coluna na Planilha</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody id="mapeamento-clientes">
-                                                            <tr>
-                                                                <td>ID</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="third_id">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Nome</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="nome">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>CPF</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="cpf">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Telefone 1</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="telefone_1">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Telefone 2</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="telefone_2">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Telefone 3</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="telefone_3">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Data de Cadastro</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="data_cadastro">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td>Crédito Loja</td>
-                                                                <td>
-                                                                    <select class="form-select form-select-sm" data-field="credito_loja">
-                                                                        <option value="">Selecione...</option>
-                                                                    </select>
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="d-flex justify-content-between mt-3">
-                                    <button class="btn btn-secondary" id="btn-prev-step2">Anterior</button>
-                                    <button class="btn btn-primary" id="btn-next-step2">Próximo</button>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 3: Processamento -->
-                            <div id="step3-content" style="display: none;">
-                                <div class="card">
-                                    <div class="card-header">
-                                        Processamento de Dados
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="mb-4">
-                                            <h5 id="processing-status">Processando dados...</h5>
-                                            <div class="progress">
-                                                <div id="processing-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
-                                            </div>
-                                        </div>
-                                        <div class="mb-4">
-                                            <h5>Log de Processamento</h5>
-                                            <div id="processing-log" class="border rounded p-3 bg-light" style="height: 300px; overflow-y: auto;">
-                                                <div class="text-muted">Aguardando início do processamento...</div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mt-3">
-                                            <button class="btn btn-secondary" id="btn-prev-step3" disabled>Anterior</button>
-                                            <button class="btn btn-primary" id="btn-next-step3" disabled>
-                                                <span id="processing-spinner" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                                Próximo
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Step 4: Conclusão -->
-                            <div id="step4-content" style="display: none;">
-                                <div class="card">
-                                    <div class="card-header">
-                                        Importação Concluída
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="text-center mb-4">
-                                            <i class="bi bi-check-circle-fill text-success" style="font-size: 4rem;"></i>
-                                            <h4 class="mt-3">Importação concluída com sucesso!</h4>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        Resumo da Importação
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <ul class="list-group list-group-flush">
-                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                Clientes Processados
-                                                                <span class="badge bg-primary rounded-pill" id="conclusion-clientes">0</span>
-                                                            </li>
-                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                Vendas Processadas
-                                                                <span class="badge bg-primary rounded-pill" id="conclusion-vendas">0</span>
-                                                            </li>
-                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                Registros de Última Compra
-                                                                <span class="badge bg-primary rounded-pill" id="conclusion-ultima-compra">0</span>
-                                                            </li>
-                                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                                Tempo de Processamento
-                                                                <span class="badge bg-secondary rounded-pill" id="conclusion-tempo">0 segundos</span>
-                                                            </li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="card">
-                                                    <div class="card-header">
-                                                        Próximos Passos
-                                                    </div>
-                                                    <div class="card-body">
-                                                        <p>Os dados foram importados com sucesso para o banco de dados. Agora você pode:</p>
-                                                        <ul>
-                                                            <li>Visualizar os dados no Dashboard</li>
-                                                            <li>Analisar os clientes por tempo desde a última compra</li>
-                                                            <li>Gerar mensagens personalizadas para cada categoria de cliente</li>
-                                                            <li>Exportar relatórios e estatísticas</li>
-                                                        </ul>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between mt-3">
-                                            <button class="btn btn-secondary" id="btn-prev-step4">Anterior</button>
-                                            <button class="btn btn-success" id="btn-finish">Concluir</button>
-                                        </div>
-                                    </div>
+                                <div class="d-flex justify-content-end mt-3">
+                                    <button id="next-step1" class="btn btn-primary">Próximo</button>
                                 </div>
                             </div>
                         </div>
@@ -815,1185 +582,179 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // Initialize Supabase client
-        const supabaseUrl = 'https://ldjfxeyyyxnhffobijmf.supabase.co';
-        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkamZ4ZXl5eXhuaGZmb2Jpam1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzM0MDAsImV4cCI6MjA3NDgwOTQwMH0.fwBzK0FBMfNCGh6Xyajkj7D5sV9Lw4a9JIWsIqPRenk';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.style.display = 'none';
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).style.display = 'block';
+            
+            // Update active link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`a[href="#${pageId}"]`).classList.add('active');
+        }
 
-        // Global variables
-        let vendasFile = null;
-        let clientesFile = null;
-        let vendasData = null;
-        let clientesData = null;
-        let ultimasCompras = [];
-        let filteredClientes = [];
-        let currentPage = 1;
-        let itemsPerPage = 10;
-        let distributionChart = null;
-        let clientDistributionChart = null;
-        let inactivityTrendChart = null;
-        
-        // Initialize the application
+        // Initialize charts when the page loads
         document.addEventListener('DOMContentLoaded', function() {
-            // Setup navigation
-            setupNavigation();
-            
-            // Setup import functionality
-            setupImport();
-            
-            // Load data from Supabase
-            loadDataFromSupabase();
-            
-            // Setup message templates
-            setupMessageTemplates();
-            
-            // Setup client filtering
-            setupClientFiltering();
-        });
-        
-        // Setup navigation
-        function setupNavigation() {
-            const navLinks = document.querySelectorAll('.nav-link');
-            navLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    // Remove active class from all links
-                    navLinks.forEach(l => l.classList.remove('active'));
-                    
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
-                    // Hide all content
-                    document.querySelectorAll('.page-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    // Show selected content
-                    const pageId = this.getAttribute('data-page');
-                    document.getElementById(pageId + '-content').classList.add('active');
-                });
-            });
-        }
-        
-        // Setup import functionality
-        function setupImport() {
-            // Upload areas
-            const uploadVendas = document.getElementById('upload-vendas');
-            const uploadClientes = document.getElementById('upload-clientes');
-            const fileVendas = document.getElementById('file-vendas');
-            const fileClientes = document.getElementById('file-clientes');
-            
-            // Step buttons
-            const btnNextStep1 = document.getElementById('btn-next-step1');
-            const btnPrevStep2 = document.getElementById('btn-prev-step2');
-            const btnNextStep2 = document.getElementById('btn-next-step2');
-            const btnPrevStep3 = document.getElementById('btn-prev-step3');
-            const btnNextStep3 = document.getElementById('btn-next-step3');
-            const btnPrevStep4 = document.getElementById('btn-prev-step4');
-            const btnFinish = document.getElementById('btn-finish');
-            
-            // Upload vendas
-            uploadVendas.addEventListener('click', () => fileVendas.click());
-            uploadVendas.addEventListener('dragover', e => {
-                e.preventDefault();
-                uploadVendas.classList.add('border-primary');
-            });
-            uploadVendas.addEventListener('dragleave', () => {
-                uploadVendas.classList.remove('border-primary');
-            });
-            uploadVendas.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadVendas.classList.remove('border-primary');
-                if (e.dataTransfer.files.length) {
-                    handleVendasFile(e.dataTransfer.files[0]);
-                }
-            });
-            fileVendas.addEventListener('change', () => {
-                if (fileVendas.files.length) {
-                    handleVendasFile(fileVendas.files[0]);
-                }
-            });
-            
-            // Upload clientes
-            uploadClientes.addEventListener('click', () => fileClientes.click());
-            uploadClientes.addEventListener('dragover', e => {
-                e.preventDefault();
-                uploadClientes.classList.add('border-primary');
-            });
-            uploadClientes.addEventListener('dragleave', () => {
-                uploadClientes.classList.remove('border-primary');
-            });
-            uploadClientes.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadClientes.classList.remove('border-primary');
-                if (e.dataTransfer.files.length) {
-                    handleClientesFile(e.dataTransfer.files[0]);
-                }
-            });
-            fileClientes.addEventListener('change', () => {
-                if (fileClientes.files.length) {
-                    handleClientesFile(fileClientes.files[0]);
-                }
-            });
-            
-            // Step navigation
-            btnNextStep1.addEventListener('click', () => {
-                document.getElementById('step1-content').style.display = 'none';
-                document.getElementById('step2-content').style.display = 'block';
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step1').classList.add('completed');
-                document.getElementById('step2').classList.add('active');
-                
-                // Populate mapping dropdowns
-                populateMappingDropdowns();
-            });
-            
-            btnPrevStep2.addEventListener('click', () => {
-                document.getElementById('step2-content').style.display = 'none';
-                document.getElementById('step1-content').style.display = 'block';
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step1').classList.remove('completed');
-                document.getElementById('step1').classList.add('active');
-            });
-            
-            btnNextStep2.addEventListener('click', () => {
-                document.getElementById('step2-content').style.display = 'none';
-                document.getElementById('step3-content').style.display = 'block';
-                document.getElementById('step2').classList.remove('active');
-                document.getElementById('step2').classList.add('completed');
-                document.getElementById('step3').classList.add('active');
-                
-                // Start processing
-                processData();
-            });
-            
-            btnPrevStep3.addEventListener('click', () => {
-                document.getElementById('step3-content').style.display = 'none';
-                document.getElementById('step2-content').style.display = 'block';
-                document.getElementById('step3').classList.remove('active');
-                document.getElementById('step2').classList.remove('completed');
-                document.getElementById('step2').classList.add('active');
-            });
-            
-            btnNextStep3.addEventListener('click', () => {
-                document.getElementById('step3-content').style.display = 'none';
-                document.getElementById('step4-content').style.display = 'block';
-                document.getElementById('step3').classList.remove('active');
-                document.getElementById('step3').classList.add('completed');
-                document.getElementById('step4').classList.add('active');
-            });
-            
-            btnPrevStep4.addEventListener('click', () => {
-                document.getElementById('step4-content').style.display = 'none';
-                document.getElementById('step3-content').style.display = 'block';
-                document.getElementById('step4').classList.remove('active');
-                document.getElementById('step3').classList.remove('completed');
-                document.getElementById('step3').classList.add('active');
-            });
-            
-            btnFinish.addEventListener('click', () => {
-                // Reset import process
-                resetImport();
-                
-                // Navigate to dashboard
-                document.querySelector('.nav-link[data-page="dashboard"]').click();
-                
-                // Reset steps
-                document.getElementById('step4-content').style.display = 'none';
-                document.getElementById('step1-content').style.display = 'block';
-                document.getElementById('step4').classList.remove('active');
-                document.getElementById('step3').classList.remove('completed');
-                document.getElementById('step2').classList.remove('completed');
-                document.getElementById('step1').classList.remove('completed');
-                document.getElementById('step1').classList.add('active');
-            });
-        }
-        
-        // Handle vendas file
-        function handleVendasFile(file) {
-            if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-                alert('Por favor, selecione um arquivo Excel (.xlsx ou .xls)');
-                return;
-            }
-            
-            vendasFile = file;
-            document.getElementById('vendas-file-info').innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-file-earmark-excel"></i>
-                    <strong>${file.name}</strong> (${formatFileSize(file.size)})
-                </div>
-            `;
-            
-            // Read file
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.SheetNames[0];
-                    vendasData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1 });
-                    
-                    // Enable next button if both files are loaded
-                    if (vendasData && clientesData) {
-                        document.getElementById('btn-next-step1').disabled = false;
-                    }
-                } catch (error) {
-                    console.error('Erro ao ler planilha de vendas:', error);
-                    document.getElementById('vendas-file-info').innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Erro ao ler o arquivo: ${error.message}
-                        </div>
-                    `;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        // Handle clientes file
-        function handleClientesFile(file) {
-            if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-                alert('Por favor, selecione um arquivo Excel (.xlsx ou .xls)');
-                return;
-            }
-            
-            clientesFile = file;
-            document.getElementById('clientes-file-info').innerHTML = `
-                <div class="alert alert-success">
-                    <i class="bi bi-file-earmark-excel"></i>
-                    <strong>${file.name}</strong> (${formatFileSize(file.size)})
-                </div>
-            `;
-            
-            // Read file
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.SheetNames[0];
-                    clientesData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet], { header: 1 });
-                    
-                    // Enable next button if both files are loaded
-                    if (vendasData && clientesData) {
-                        document.getElementById('btn-next-step1').disabled = false;
-                    }
-                } catch (error) {
-                    console.error('Erro ao ler planilha de clientes:', error);
-                    document.getElementById('clientes-file-info').innerHTML = `
-                        <div class="alert alert-danger">
-                            <i class="bi bi-exclamation-triangle"></i>
-                            Erro ao ler o arquivo: ${error.message}
-                        </div>
-                    `;
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        }
-        
-        // Format file size
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        
-        // Populate mapping dropdowns
-        function populateMappingDropdowns() {
-            // Vendas headers
-            const vendasHeaders = vendasData[0];
-            const vendasSelects = document.querySelectorAll('#mapeamento-vendas select');
-            
-            vendasSelects.forEach(select => {
-                select.innerHTML = '<option value="">Selecione...</option>';
-                vendasHeaders.forEach((header, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = header;
-                    select.appendChild(option);
-                    
-                    // Auto-select based on field name
-                    const fieldName = select.getAttribute('data-field');
-                    if (header.toLowerCase().includes(fieldName.toLowerCase())) {
-                        select.value = index;
-                    }
-                });
-            });
-            
-            // Clientes headers
-            const clientesHeaders = clientesData[0];
-            const clientesSelects = document.querySelectorAll('#mapeamento-clientes select');
-            
-            clientesSelects.forEach(select => {
-                select.innerHTML = '<option value="">Selecione...</option>';
-                clientesHeaders.forEach((header, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = header;
-                    select.appendChild(option);
-                    
-                    // Auto-select based on field name
-                    const fieldName = select.getAttribute('data-field');
-                    if (header.toLowerCase().includes(fieldName.toLowerCase())) {
-                        select.value = index;
-                    }
-                });
-            });
-        }
-        
-        // Process data
-        async function processData() {
-            const progressBar = document.getElementById('processing-progress');
-            const processingStatus = document.getElementById('processing-status');
-            const processingLog = document.getElementById('processing-log');
-            const nextButton = document.getElementById('btn-next-step3');
-            const prevButton = document.getElementById('btn-prev-step3');
-            
-            // Clear log
-            processingLog.innerHTML = '';
-            
-            // Disable buttons
-            nextButton.disabled = true;
-            prevButton.disabled = true;
-            
-            // Log function
-            function log(message) {
-                const logItem = document.createElement('div');
-                logItem.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-                processingLog.appendChild(logItem);
-                processingLog.scrollTop = processingLog.scrollHeight;
-            }
-            
-            try {
-                const startTime = new Date();
-                log('Iniciando processamento de dados...');
-                
-                // Get mapping
-                const vendasMapping = {};
-                document.querySelectorAll('#mapeamento-vendas select').forEach(select => {
-                    vendasMapping[select.getAttribute('data-field')] = parseInt(select.value);
-                });
-                
-                const clientesMapping = {};
-                document.querySelectorAll('#mapeamento-clientes select').forEach(select => {
-                    clientesMapping[select.getAttribute('data-field')] = parseInt(select.value);
-                });
-                
-                // Process vendas
-                log('Processando dados de vendas...');
-                progressBar.style.width = '20%';
-                
-                const vendasProcessadas = [];
-                for (let i = 1; i < vendasData.length; i++) {
-                    const row = vendasData[i];
-                    if (row.length === 0) continue;
-                    
-                    const venda = {
-                        data: row[vendasMapping.data],
-                        movimentacao: row[vendasMapping.movimentacao],
-                        quantidade: row[vendasMapping.quantidade],
-                        total: row[vendasMapping.total],
-                        cliente: row[vendasMapping.cliente],
-                        vendedor: row[vendasMapping.vendedor],
-                        telefone: row[vendasMapping.telefone],
-                        custo_venda: row[vendasMapping.custo_venda],
-                        lucro_venda: row[vendasMapping.lucro_venda]
-                    };
-                    
-                    vendasProcessadas.push(venda);
-                }
-                
-                log(`Processadas ${vendasProcessadas.length} vendas`);
-                progressBar.style.width = '40%';
-                
-                // Process clientes
-                log('Processando dados de clientes...');
-                
-                const clientesProcessados = [];
-                for (let i = 1; i < clientesData.length; i++) {
-                    const row = clientesData[i];
-                    if (row.length === 0) continue;
-                    
-                    const cliente = {
-                        third_id: row[clientesMapping.third_id],
-                        nome: row[clientesMapping.nome],
-                        cpf: row[clientesMapping.cpf],
-                        telefone_1: row[clientesMapping.telefone_1],
-                        telefone_2: row[clientesMapping.telefone_2],
-                        telefone_3: row[clientesMapping.telefone_3],
-                        data_cadastro: row[clientesMapping.data_cadastro],
-                        credito_loja: row[clientesMapping.credito_loja]
-                    };
-                    
-                    clientesProcessados.push(cliente);
-                }
-                
-                log(`Processados ${clientesProcessados.length} clientes`);
-                progressBar.style.width = '60%';
-                
-                // Integrate data
-                log('Integrando dados de vendas e clientes...');
-                
-                const ultimasCompras = [];
-                const clientesPorTelefone = {};
-                
-                // Index clientes by telefone
-                clientesProcessados.forEach(cliente => {
-                    if (cliente.telefone_1) clientesPorTelefone[cliente.telefone_1] = cliente;
-                    if (cliente.telefone_2) clientesPorTelefone[cliente.telefone_2] = cliente;
-                    if (cliente.telefone_3) clientesPorTelefone[cliente.telefone_3] = cliente;
-                });
-                
-                // Process vendas to find last purchase
-                const vendasPorCliente = {};
-                vendasProcessadas.forEach(venda => {
-                    const telefone = venda.telefone;
-                    if (!telefone) return;
-                    
-                    if (!vendasPorCliente[telefone] || new Date(venda.data) > new Date(vendasPorCliente[telefone].data)) {
-                        vendasPorCliente[telefone] = venda;
-                    }
-                });
-                
-                // Create ultima_compra records
-                for (const telefone in vendasPorCliente) {
-                    const venda = vendasPorCliente[telefone];
-                    const cliente = clientesPorTelefone[telefone];
-                    
-                    if (!cliente) {
-                        log(`Aviso: Cliente não encontrado para o telefone ${telefone}`);
-                        continue;
-                    }
-                    
-                    const dataUltimaCompra = new Date(venda.data);
-                    const hoje = new Date();
-                    const diasInativo = Math.floor((hoje - dataUltimaCompra) / (1000 * 60 * 60 * 24));
-                    
-                    ultimasCompras.push({
-                        cliente_id: cliente.third_id,
-                        nome: cliente.nome,
-                        cpf: cliente.cpf,
-                        telefone: telefone,
-                        data_ultima_compra: dataUltimaCompra.toISOString(),
-                        valor_ultima_compra: venda.total,
-                        dias_inativo: diasInativo
-                    });
-                }
-                
-                log(`Gerados ${ultimasCompras.length} registros de última compra`);
-                progressBar.style.width = '80%';
-                
-                // Save to Supabase
-                log('Salvando dados no Supabase...');
-                
-                // Create tables if they don't exist
-                const { error: createTablesError } = await supabase.rpc('criar_tabelas');
-                if (createTablesError) {
-                    log(`Erro ao criar tabelas: ${createTablesError.message}`);
-                } else {
-                    log('Tabelas verificadas com sucesso.');
-                }
-                
-                // Insert clientes
-                log('Inserindo dados de clientes...');
-                for (let i = 0; i < clientesProcessados.length; i += 100) {
-                    const batch = clientesProcessados.slice(i, i + 100);
-                    const { error } = await supabase.from('clientes').insert(batch);
-                    if (error) {
-                        log(`Erro ao inserir clientes: ${error.message}`);
-                    } else {
-                        log(`Inseridos ${batch.length} clientes (lote ${Math.floor(i/100) + 1})`);
-                    }
-                }
-                
-                // Insert vendas
-                log('Inserindo dados de vendas...');
-                for (let i = 0; i < vendasProcessadas.length; i += 100) {
-                    const batch = vendasProcessadas.slice(i, i + 100);
-                    const { error } = await supabase.from('vendas').insert(batch);
-                    if (error) {
-                        log(`Erro ao inserir vendas: ${error.message}`);
-                    } else {
-                        log(`Inseridas ${batch.length} vendas (lote ${Math.floor(i/100) + 1})`);
-                    }
-                }
-                
-                // Insert ultima_compra
-                log('Inserindo dados de última compra...');
-                for (let i = 0; i < ultimasCompras.length; i += 100) {
-                    const batch = ultimasCompras.slice(i, i + 100);
-                    const { error } = await supabase.from('ultima_compra').insert(batch);
-                    if (error) {
-                        log(`Erro ao inserir última compra: ${error.message}`);
-                    } else {
-                        log(`Inseridos ${batch.length} registros de última compra (lote ${Math.floor(i/100) + 1})`);
-                    }
-                }
-                
-                progressBar.style.width = '100%';
-                
-                const endTime = new Date();
-                const processingTime = (endTime - startTime) / 1000;
-                
-                log(`Processamento concluído em ${processingTime.toFixed(1)} segundos.`);
-                processingStatus.textContent = 'Processamento concluído!';
-                processingStatus.classList.add('text-success');
-                document.getElementById('processing-spinner').style.display = 'none';
-                
-                // Update conclusion data
-                document.getElementById('conclusion-clientes').textContent = clientesProcessados.length;
-                document.getElementById('conclusion-vendas').textContent = vendasProcessadas.length;
-                document.getElementById('conclusion-ultima-compra').textContent = ultimasCompras.length;
-                document.getElementById('conclusion-tempo').textContent = `${processingTime.toFixed(1)} segundos`;
-                
-                // Enable next button
-                nextButton.disabled = false;
-                prevButton.disabled = false;
-                
-            } catch (error) {
-                console.error('Erro durante o processamento:', error);
-                log(`ERRO: ${error.message}`);
-                processingStatus.textContent = 'Erro no processamento!';
-                processingStatus.classList.add('text-danger');
-                prevButton.disabled = false;
-            }
-        }
-
-        // Reset import process
-        function resetImport() {
-            // Reset files
-            vendasFile = null;
-            clientesFile = null;
-            vendasData = null;
-            clientesData = null;
-            
-            // Reset file info
-            document.getElementById('vendas-file-info').innerHTML = '';
-            document.getElementById('clientes-file-info').innerHTML = '';
-            
-            // Reset file inputs
-            document.getElementById('file-vendas').value = '';
-            document.getElementById('file-clientes').value = '';
-            
-            // Reset buttons
-            document.getElementById('btn-next-step1').disabled = true;
-            
-            // Reset processing elements
-            document.getElementById('processing-progress').style.width = '0%';
-            document.getElementById('processing-spinner').style.display = 'inline-block';
-            document.getElementById('processing-status').textContent = 'Processando dados...';
-            document.getElementById('processing-status').classList.remove('text-success', 'text-danger');
-            document.getElementById('processing-log').innerHTML = '<div class="text-muted">Aguardando início do processamento...</div>';
-        }
-
-        // Load data from Supabase
-        async function loadDataFromSupabase() {
-            try {
-                // Load ultima_compra data
-                const { data: ultimaCompraData, error: ultimaCompraError } = await supabase
-                    .from('ultima_compra')
-                    .select('*');
-                
-                if (ultimaCompraError) {
-                    console.error('Erro ao carregar dados de última compra:', ultimaCompraError);
-                    return;
-                }
-                
-                // Process data
-                ultimasCompras = ultimaCompraData.map(item => ({
-                    ...item,
-                    data_ultima_compra: new Date(item.data_ultima_compra)
-                }));
-                
-                // Update dashboard
-                updateDashboard();
-                
-                // Update clientes table
-                filteredClientes = [...ultimasCompras];
-                renderClientesTable();
-                
-                // Update message templates
-                updateCategoryCounts();
-                updatePreviewClientsDropdown('ativos-recentes');
-                
-                // Update statistics
-                updateStatistics();
-                
-            } catch (error) {
-                console.error('Erro ao carregar dados do Supabase:', error);
-            }
-        }
-
-        // Update dashboard
-        function updateDashboard() {
-            // Update stats
-            const ativos = ultimasCompras.filter(c => c.dias_inativo <= 60).length;
-            const risco = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 180).length;
-            const inativos = ultimasCompras.filter(c => c.dias_inativo > 180).length;
-            const tempoMedio = Math.round(ultimasCompras.reduce((sum, c) => sum + c.dias_inativo, 0) / ultimasCompras.length);
-            
-            document.getElementById('dashboard-ativos').textContent = ativos;
-            document.getElementById('dashboard-risco').textContent = risco;
-            document.getElementById('dashboard-inativos').textContent = inativos;
-            document.getElementById('dashboard-tempo-medio').textContent = `${tempoMedio} dias`;
-            
-            // Update distribution chart
-            const distributionData = [
-                ultimasCompras.filter(c => c.dias_inativo <= 30).length,
-                ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length,
-                ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length,
-                ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length,
-                ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length,
-                ultimasCompras.filter(c => c.dias_inativo > 365).length
-            ];
-            
-            if (distributionChart) {
-                distributionChart.data.datasets[0].data = distributionData;
-                distributionChart.update();
-            } else {
-                const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-                distributionChart = new Chart(distributionCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '>365 dias'],
-                        datasets: [{
-                            label: 'Número de Clientes',
-                            data: distributionData,
-                            backgroundColor: [
-                                'rgba(40, 167, 69, 0.7)',
-                                'rgba(40, 167, 69, 0.5)',
-                                'rgba(255, 193, 7, 0.7)',
-                                'rgba(255, 193, 7, 0.5)',
-                                'rgba(220, 53, 69, 0.7)',
-                                'rgba(220, 53, 69, 0.5)'
-                            ],
-                            borderColor: [
-                                'rgba(40, 167, 69, 1)',
-                                'rgba(40, 167, 69, 1)',
-                                'rgba(255, 193, 7, 1)',
-                                'rgba(255, 193, 7, 1)',
-                                'rgba(220, 53, 69, 1)',
-                                'rgba(220, 53, 69, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        },
-                        plugins: {
-                            legend: {
-                                display: false
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Update clientes que precisam de atenção
-            const clientesAtencao = ultimasCompras
-                .filter(c => c.dias_inativo > 60)
-                .sort((a, b) => b.dias_inativo - a.dias_inativo)
-                .slice(0, 5);
-            
-            const clientesAtencaoHtml = clientesAtencao.map(cliente => `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    ${cliente.nome}
-                    <span class="badge ${getBadgeClass(cliente.dias_inativo)} rounded-pill">${cliente.dias_inativo} dias</span>
-                </li>
-            `).join('');
-            
-            document.getElementById('clientes-atencao').innerHTML = clientesAtencaoHtml || '<li class="list-group-item text-center">Nenhum cliente encontrado</li>';
-            
-            // Update últimas compras
-            const ultimasComprasRecentes = [...ultimasCompras]
-                .sort((a, b) => b.data_ultima_compra - a.data_ultima_compra)
-                .slice(0, 5);
-            
-            const ultimasComprasHtml = ultimasComprasRecentes.map(compra => `
-                <tr>
-                    <td>${compra.nome}</td>
-                    <td>${formatDate(compra.data_ultima_compra)}</td>
-                    <td>${formatCurrency(compra.valor_ultima_compra)}</td>
-                    <td>${compra.dias_inativo}</td>
-                    <td><span class="badge ${getBadgeClass(compra.dias_inativo)}">${getStatusText(compra.dias_inativo)}</span></td>
-                </tr>
-            `).join('');
-            
-            document.getElementById('ultimas-compras').innerHTML = ultimasComprasHtml || '<tr><td colspan="5" class="text-center">Nenhum registro encontrado</td></tr>';
-        }
-
-        // Update statistics
-        function updateStatistics() {
-            // Update client distribution chart
-            const distributionData = [
-                ultimasCompras.filter(c => c.dias_inativo <= 30).length / ultimasCompras.length * 100,
-                ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length / ultimasCompras.length * 100,
-                ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length / ultimasCompras.length * 100,
-                ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length / ultimasCompras.length * 100,
-                ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length / ultimasCompras.length * 100,
-                ultimasCompras.filter(c => c.dias_inativo > 365).length / ultimasCompras.length * 100
-            ];
-            
-            if (clientDistributionChart) {
-                clientDistributionChart.data.datasets[0].data = distributionData;
-                clientDistributionChart.update();
-            } else {
-                const clientDistributionCtx = document.getElementById('clientDistributionChart').getContext('2d');
-                clientDistributionChart = new Chart(clientDistributionCtx, {
-                    type: 'pie',
-                    data: {
-                        labels: ['Ativos Recentes', 'Ativos', 'Em Risco', 'Em Risco Alto', 'Inativos', 'Perdidos'],
-                        datasets: [{
-                            data: distributionData,
-                            backgroundColor: [
-                                'rgba(40, 167, 69, 0.7)',
-                                'rgba(40, 167, 69, 0.5)',
-                                'rgba(255, 193, 7, 0.7)',
-                                'rgba(255, 193, 7, 0.5)',
-                                'rgba(220, 53, 69, 0.7)',
-                                'rgba(220, 53, 69, 0.5)'
-                            ],
-                            borderColor: [
-                                'rgba(40, 167, 69, 1)',
-                                'rgba(40, 167, 69, 1)',
-                                'rgba(255, 193, 7, 1)',
-                                'rgba(255, 193, 7, 1)',
-                                'rgba(220, 53, 69, 1)',
-                                'rgba(220, 53, 69, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        plugins: {
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.label}: ${context.raw.toFixed(1)}%`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Update inactivity trend chart (simulated data)
-            if (!inactivityTrendChart) {
-                const inactivityTrendCtx = document.getElementById('inactivityTrendChart').getContext('2d');
-                inactivityTrendChart = new Chart(inactivityTrendCtx, {
-                    type: 'line',
-                    data: {
-                        labels: ['Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro'],
-                        datasets: [
-                            {
-                                label: 'Ativos',
-                                data: [410, 425, 440, 430, 445, 428],
-                                borderColor: 'rgba(40, 167, 69, 1)',
-                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                                fill: true,
-                                tension: 0.4
-                            },
-                            {
-                                label: 'Em Risco',
-                                data: [210, 205, 215, 225, 230, 225],
-                                borderColor: 'rgba(255, 193, 7, 1)',
-                                backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                                fill: true,
-                                tension: 0.4
-                            },
-                            {
-                                label: 'Inativos',
-                                data: [150, 155, 160, 155, 150, 157],
-                                borderColor: 'rgba(220, 53, 69, 1)',
-                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                                fill: true,
-                                tension: 0.4
-                            }
+            // Inactivity Chart
+            const inactivityCtx = document.getElementById('inactivityChart').getContext('2d');
+            const inactivityChart = new Chart(inactivityCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '+365 dias'],
+                    datasets: [{
+                        data: [87, 65, 23, 18, 15, 15],
+                        backgroundColor: [
+                            '#28a745',
+                            '#20c997',
+                            '#ffc107',
+                            '#fd7e14',
+                            '#dc3545',
+                            '#6c757d'
                         ]
-                    },
-                    options: {
-                        scales: {
-                            y: {
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
-            
-            // Update resumo por categoria
-            const ativosRecentes = ultimasCompras.filter(c => c.dias_inativo <= 30);
-            const ativos = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60);
-            const risco = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90);
-            const riscoAlto = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180);
-            const inativos = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365);
-            const perdidos = ultimasCompras.filter(c => c.dias_inativo > 365);
-            
-            const total = ultimasCompras.length;
-            
-            const resumoHtml = `
-                <tr>
-                    <td>Ativos Recentes (0-30 dias)</td>
-                    <td>${ativosRecentes.length}</td>
-                    <td>${(ativosRecentes.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(ativosRecentes.reduce((sum, c) => sum + c.dias_inativo, 0) / ativosRecentes.length || 0)} dias</td>
-                    <td>Manter engajamento</td>
-                </tr>
-                <tr>
-                    <td>Ativos (31-60 dias)</td>
-                    <td>${ativos.length}</td>
-                    <td>${(ativos.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(ativos.reduce((sum, c) => sum + c.dias_inativo, 0) / ativos.length || 0)} dias</td>
-                    <td>Oferecer novidades</td>
-                </tr>
-                <tr>
-                    <td>Em Risco (61-90 dias)</td>
-                    <td>${risco.length}</td>
-                    <td>${(risco.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(risco.reduce((sum, c) => sum + c.dias_inativo, 0) / risco.length || 0)} dias</td>
-                    <td>Enviar promoção</td>
-                </tr>
-                <tr>
-                    <td>Em Risco Alto (91-180 dias)</td>
-                    <td>${riscoAlto.length}</td>
-                    <td>${(riscoAlto.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(riscoAlto.reduce((sum, c) => sum + c.dias_inativo, 0) / riscoAlto.length || 0)} dias</td>
-                    <td>Oferecer desconto especial</td>
-                </tr>
-                <tr>
-                    <td>Inativos (181-365 dias)</td>
-                    <td>${inativos.length}</td>
-                    <td>${(inativos.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(inativos.reduce((sum, c) => sum + c.dias_inativo, 0) / inativos.length || 0)} dias</td>
-                    <td>Reativar com oferta exclusiva</td>
-                </tr>
-                <tr>
-                    <td>Perdidos (>365 dias)</td>
-                    <td>${perdidos.length}</td>
-                    <td>${(perdidos.length / total * 100).toFixed(1)}%</td>
-                    <td>${Math.round(perdidos.reduce((sum, c) => sum + c.dias_inativo, 0) / perdidos.length || 0)} dias</td>
-                    <td>Campanha de reconquista</td>
-                </tr>
-            `;
-            
-            document.getElementById('resumo-categorias').innerHTML = resumoHtml;
-        }
-
-        // Setup message templates
-        function setupMessageTemplates() {
-            // Category links
-            const categoryLinks = document.querySelectorAll('#categorias-clientes a');
-            categoryLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Remove active class from all links
-                    categoryLinks.forEach(l => l.classList.remove('active'));
-                    
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
-                    // Update preview clients dropdown
-                    const category = this.getAttribute('data-category');
-                    updatePreviewClientsDropdown(category);
-                });
-            });
-            
-            // Preview client dropdown
-            const previewClient = document.getElementById('previewClient');
-            previewClient.addEventListener('change', updateMessagePreview);
-            
-            // Copy message button
-            const copyMessage = document.getElementById('copyMessage');
-            copyMessage.addEventListener('click', function() {
-                const messageText = document.getElementById('messagePreview').textContent;
-                navigator.clipboard.writeText(messageText).then(() => {
-                    const originalText = copyMessage.innerHTML;
-                    copyMessage.innerHTML = '<i class="bi bi-check"></i> Copiado!';
-                    setTimeout(() => {
-                        copyMessage.innerHTML = originalText;
-                    }, 2000);
-                });
-            });
-        }
-
-        // Update category counts
-        function updateCategoryCounts() {
-            document.getElementById('count-ativos-recentes').textContent = ultimasCompras.filter(c => c.dias_inativo <= 30).length;
-            document.getElementById('count-ativos').textContent = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length;
-            document.getElementById('count-risco').textContent = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length;
-            document.getElementById('count-risco-alto').textContent = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length;
-            document.getElementById('count-inativos').textContent = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length;
-            document.getElementById('count-perdidos').textContent = ultimasCompras.filter(c => c.dias_inativo > 365).length;
-        }
-
-        // Update preview clients dropdown
-        function updatePreviewClientsDropdown(category) {
-            const previewClient = document.getElementById('previewClient');
-            previewClient.innerHTML = '';
-            
-            let filteredClientes;
-            switch (category) {
-                case 'ativos-recentes':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo <= 30);
-                    break;
-                case 'ativos':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60);
-                    break;
-                case 'risco':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90);
-                    break;
-                case 'risco-alto':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180);
-                    break;
-                case 'inativos':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365);
-                    break;
-                case 'perdidos':
-                    filteredClientes = ultimasCompras.filter(c => c.dias_inativo > 365);
-                    break;
-            }
-            
-            if (filteredClientes.length === 0) {
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = 'Nenhum cliente nesta categoria';
-                previewClient.appendChild(option);
-            } else {
-                filteredClientes.forEach(cliente => {
-                    const option = document.createElement('option');
-                    option.value = JSON.stringify(cliente);
-                    option.textContent = `${cliente.nome} (${cliente.dias_inativo} dias)`;
-                    previewClient.appendChild(option);
-                });
-            }
-            
-            updateMessagePreview();
-        }
-
-        // Update message preview
-        function updateMessagePreview() {
-            const previewClient = document.getElementById('previewClient');
-            const messagePreview = document.getElementById('messagePreview');
-            
-            if (!previewClient.value) {
-                messagePreview.textContent = 'Selecione um cliente para visualizar a mensagem personalizada.';
-                return;
-            }
-            
-            try {
-                const cliente = JSON.parse(previewClient.value);
-                const category = document.querySelector('#categorias-clientes a.active').getAttribute('data-category');
-                
-                let message = '';
-                const firstName = cliente.nome.split(' ')[0];
-                const dataUltimaCompra = formatDate(new Date(cliente.data_ultima_compra));
-                
-                switch (category) {
-                    case 'ativos-recentes':
-                        message = `Olá ${firstName}! Obrigado pela sua compra recente em ${dataUltimaCompra}. Esperamos que esteja aproveitando seus produtos. Temos novidades chegando que podem te interessar! Quando puder, dê uma passadinha na loja para conferir. Até breve!`;
-                        break;
-                    case 'ativos':
-                        message = `Olá ${firstName}! Já faz ${cliente.dias_inativo} dias desde sua última visita em ${dataUltimaCompra}. Sentimos sua falta! Temos produtos novos que combinam com seu estilo. Que tal passar na loja esta semana? Teremos todo prazer em atendê-lo(a) novamente!`;
-                        break;
-                    case 'risco':
-                        message = `${firstName}, tudo bem? Notamos que faz ${cliente.dias_inativo} dias desde sua última compra em ${dataUltimaCompra}. Estamos com uma seleção especial de produtos que acreditamos que você vai adorar! Além disso, preparamos um desconto de 10% na sua próxima compra. Esperamos vê-lo(a) em breve!`;
-                        break;
-                    case 'risco-alto':
-                        message = `${firstName}, sentimos sua falta! Já se passaram ${cliente.dias_inativo} dias desde sua última visita em ${dataUltimaCompra}. Renovamos nossa coleção e temos itens que combinam perfeitamente com seu estilo. Como cliente especial, preparamos um cupom de 15% de desconto para sua próxima compra. É só apresentar esta mensagem!`;
-                        break;
-                    case 'inativos':
-                        message = `${firstName}, que saudades! Faz ${cliente.dias_inativo} dias que não nos visita (sua última compra foi em ${dataUltimaCompra}). Muita coisa mudou por aqui e gostaríamos muito de revê-lo(a)! Preparamos uma oferta exclusiva de 20% de desconto em qualquer produto da loja, válida por 15 dias. Esperamos sua visita!`;
-                        break;
-                    case 'perdidos':
-                        message = `${firstName}, estamos com saudades! Sua última visita foi há mais de um ano (${dataUltimaCompra}). Desde então, renovamos completamente nossa coleção e temos certeza que você vai se surpreender! Como um gesto especial, oferecemos 25% de desconto em qualquer compra + um brinde exclusivo. Será um prazer recebê-lo(a) novamente!`;
-                        break;
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
                 }
-                
-                messagePreview.textContent = message;
-                
-            } catch (error) {
-                console.error('Erro ao atualizar preview da mensagem:', error);
-                messagePreview.textContent = 'Erro ao gerar mensagem personalizada.';
-            }
-        }
+            });
 
-        // Setup client filtering
-        function setupClientFiltering() {
-            const btnFiltrarClientes = document.getElementById('btn-filtrar-clientes');
-            btnFiltrarClientes.addEventListener('click', function() {
-                const buscaCliente = document.getElementById('busca-cliente').value.toLowerCase();
-                const filtroStatus = document.getElementById('filtro-status').value;
-                
-                filteredClientes = ultimasCompras.filter(cliente => {
-                    // Filter by search term
-                    const matchesSearch = !buscaCliente || 
-                        cliente.nome.toLowerCase().includes(buscaCliente) || 
-                        cliente.cpf.toLowerCase().includes(buscaCliente);
-                    
-                    // Filter by status
-                    let matchesStatus = true;
-                    if (filtroStatus) {
-                        const [min, max] = filtroStatus.split('-');
-                        if (max === '+') {
-                            matchesStatus = cliente.dias_inativo > parseInt(min);
-                        } else {
-                            matchesStatus = cliente.dias_inativo > parseInt(min) && cliente.dias_inativo <= parseInt(max);
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            const distributionChart = new Chart(distributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '+365 dias'],
+                    datasets: [{
+                        label: 'Quantidade de Clientes',
+                        data: [87, 65, 23, 18, 15, 15],
+                        backgroundColor: [
+                            '#28a745',
+                            '#20c997',
+                            '#ffc107',
+                            '#fd7e14',
+                            '#dc3545',
+                            '#6c757d'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
                         }
                     }
-                    
-                    return matchesSearch && matchesStatus;
-                });
+                }
+            });
+
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            const trendChart = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'],
+                    datasets: [{
+                        label: 'Clientes Ativos',
+                        data: [120, 125, 130, 135, 140, 145, 150, 155, 152],
+                        borderColor: '#28a745',
+                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                        fill: true
+                    }, {
+                        label: 'Clientes Inativos',
+                        data: [30, 28, 25, 22, 20, 18, 15, 12, 15],
+                        borderColor: '#dc3545',
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // File Upload Handling
+            document.getElementById('upload-vendas').addEventListener('click', function() {
+                document.getElementById('file-vendas').click();
+            });
+
+            document.getElementById('upload-clientes').addEventListener('click', function() {
+                document.getElementById('file-clientes').click();
+            });
+
+            document.getElementById('file-vendas').addEventListener('change', function(e) {
+                const fileName = e.target.files[0].name;
+                document.getElementById('vendas-file-info').innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
+            });
+
+            document.getElementById('file-clientes').addEventListener('change', function(e) {
+                const fileName = e.target.files[0].name;
+                document.getElementById('clientes-file-info').innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
+            });
+
+            // Drag and Drop
+            ['upload-vendas', 'upload-clientes'].forEach(id => {
+                const dropArea = document.getElementById(id);
+                const fileInput = document.getElementById(id === 'upload-vendas' ? 'file-vendas' : 'file-clientes');
+                const fileInfo = document.getElementById(id === 'upload-vendas' ? 'vendas-file-info' : 'clientes-file-info');
                 
-                currentPage = 1;
-                renderClientesTable();
-            });
-        }
-
-        // Render clientes table
-        function renderClientesTable() {
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const pageItems = filteredClientes.slice(start, end);
-            
-            const tableBody = document.getElementById('lista-clientes');
-            
-            if (pageItems.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado</td></tr>';
-                return;
-            }
-            
-            const html = pageItems.map(cliente => `
-                <tr>
-                    <td>${cliente.nome}</td>
-                    <td>${cliente.cpf}</td>
-                    <td>${cliente.telefone}</td>
-                    <td>${formatDate(new Date(cliente.data_ultima_compra))}</td>
-                    <td>${cliente.dias_inativo}</td>
-                    <td><span class="badge ${getBadgeClass(cliente.dias_inativo)}">${getStatusText(cliente.dias_inativo)}</span></td>
-                    <td>
-                        <button class="btn btn-sm btn-primary" onclick="showClienteMessage('${cliente.cliente_id}')">
-                            <i class="bi bi-chat-dots"></i> Mensagem
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
-            
-            tableBody.innerHTML = html;
-            
-            // Update pagination
-            renderPagination();
-        }
-
-        // Render pagination
-        function renderPagination() {
-            const totalPages = Math.ceil(filteredClientes.length / itemsPerPage);
-            const pagination = document.getElementById('paginacao-clientes');
-            
-            let html = `
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                    <a class="page-link" href="#" data-page="${currentPage - 1}">Anterior</a>
-                </li>
-            `;
-            
-            for (let i = 1; i <= totalPages; i++) {
-                html += `
-                    <li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" data-page="${i}">${i}</a>
-                    </li>
-                `;
-            }
-            
-            html += `
-                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                    <a class="page-link" href="#" data-page="${currentPage + 1}">Próximo</a>
-                </li>
-            `;
-            
-            pagination.innerHTML = html;
-            
-            // Add event listeners
-            const pageLinks = pagination.querySelectorAll('.page-link');
-            pageLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = parseInt(this.getAttribute('data-page'));
-                    if (page >= 1 && page <= totalPages) {
-                        currentPage = page;
-                        renderClientesTable();
-                    }
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, preventDefaults, false);
                 });
-            });
-        }
 
-        // Helper functions
-        function formatDate(date) {
-            return date.toLocaleDateString('pt-BR');
-        }
-        
-        function formatCurrency(value) {
-            return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        }
-        
-        function getBadgeClass(diasInativo) {
-            if (diasInativo <= 30) return 'bg-success';
-            if (diasInativo <= 60) return 'bg-success';
-            if (diasInativo <= 90) return 'bg-warning';
-            if (diasInativo <= 180) return 'bg-warning';
-            if (diasInativo <= 365) return 'bg-danger';
-            return 'bg-danger';
-        }
-        
-        function getStatusText(diasInativo) {
-            if (diasInativo <= 30) return 'Ativo Recente';
-            if (diasInativo <= 60) return 'Ativo';
-            if (diasInativo <= 90) return 'Em Risco';
-            if (diasInativo <= 180) return 'Em Risco Alto';
-            if (diasInativo <= 365) return 'Inativo';
-            return 'Perdido';
-        }
+                function preventDefaults(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
 
-        window.showClienteMessage = function(clienteId) {
-            const cliente = ultimasCompras.find(c => c.cliente_id === clienteId);
-            if (!cliente) return;
-            
-            // Navigate to mensagens page
-            document.querySelector('.nav-link[data-page="mensagens"]').click();
-            
-            // Select appropriate category
-            let category;
-            if (cliente.dias_inativo <= 30) category = 'ativos-recentes';
-            else if (cliente.dias_inativo <= 60) category = 'ativos';
-            else if (cliente.dias_inativo <= 90) category = 'risco';
-            else if (cliente.dias_inativo <= 180) category = 'risco-alto';
-            else if (cliente.dias_inativo <= 365) category = 'inativos';
-            else category = 'perdidos';
-            
-            document.querySelector(`#categorias-clientes a[data-category="${category}"]`).click();
-            
-            // Select client in dropdown
-            const previewClient = document.getElementById('previewClient');
-            for (let i = 0; i < previewClient.options.length; i++) {
-                try {
-                    const option = previewClient.options[i];
-                    const optionData = JSON.parse(option.value);
-                    if (optionData.cliente_id === clienteId) {
-                        previewClient.selectedIndex = i;
-                        break;
+                ['dragenter', 'dragover'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, highlight, false);
+                });
+
+                ['dragleave', 'drop'].forEach(eventName => {
+                    dropArea.addEventListener(eventName, unhighlight, false);
+                });
+
+                function highlight() {
+                    dropArea.style.borderColor = '#007bff';
+                    dropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                }
+
+                function unhighlight() {
+                    dropArea.style.borderColor = '#ccc';
+                    dropArea.style.backgroundColor = '';
+                }
+
+                dropArea.addEventListener('drop', handleDrop, false);
+
+                function handleDrop(e) {
+                    const dt = e.dataTransfer;
+                    const files = dt.files;
+                    
+                    if (files.length > 0) {
+                        fileInput.files = files;
+                        const fileName = files[0].name;
+                        fileInfo.innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
                     }
-                } catch (e) {}
-            }
-            
-            // Update preview
-            updateMessagePreview();
-        };
+                }
+            });
+
+            // Next Step Button
+            document.getElementById('next-step1').addEventListener('click', function() {
+                alert('Esta funcionalidade está em desenvolvimento. Em breve você poderá importar suas planilhas!');
+            });
+        });
     </script>
 </body>
 </html>

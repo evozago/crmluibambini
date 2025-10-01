@@ -1,0 +1,2028 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Lui Bambini - Análise de Tempo desde Última Compra</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --accent-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-bg: #343a40;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light-bg);
+            color: #333;
+        }
+        
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        .sidebar {
+            background-color: var(--dark-bg);
+            color: white;
+            min-height: calc(100vh - 56px);
+            transition: all 0.3s;
+        }
+        
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1rem;
+            border-radius: 0.25rem;
+            margin: 0.2rem 0;
+        }
+        
+        .sidebar .nav-link:hover {
+            color: white;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .sidebar .nav-link.active {
+            color: white;
+            background-color: var(--primary-color);
+        }
+        
+        .sidebar .nav-link i {
+            margin-right: 0.5rem;
+        }
+        
+        .content {
+            padding: 1.5rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+            font-weight: 600;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+        }
+        
+        .stat-card i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        .stat-card .stat-value {
+            font-size: 1.75rem;
+            font-weight: bold;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-card .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            background-color: var(--light-bg);
+            font-weight: 600;
+        }
+        
+        .badge-category {
+            padding: 0.5em 0.75em;
+            font-weight: 500;
+        }
+        
+        .badge-30d {
+            background-color: #28a745;
+        }
+        
+        .badge-60d {
+            background-color: #17a2b8;
+        }
+        
+        .badge-90d {
+            background-color: #ffc107;
+        }
+        
+        .badge-180d {
+            background-color: #fd7e14;
+        }
+        
+        .badge-365d {
+            background-color: #dc3545;
+        }
+        
+        .badge-365d-plus {
+            background-color: #6c757d;
+        }
+        
+        .search-container {
+            position: relative;
+        }
+        
+        .search-container i {
+            position: absolute;
+            left: 1rem;
+            top: 0.75rem;
+            color: #6c757d;
+        }
+        
+        .search-input {
+            padding-left: 2.5rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+        }
+        
+        .message-template {
+            background-color: #f8f9fa;
+            border-left: 4px solid var(--primary-color);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .message-template .btn-copy {
+            float: right;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary-color);
+            background-color: rgba(52, 152, 219, 0.05);
+        }
+        
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        
+        .upload-area h4 {
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-area p {
+            color: #6c757d;
+        }
+        
+        .preview-table {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .column-mapping {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            position: relative;
+        }
+        
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ccc;
+            transform: translateY(-50%);
+            z-index: -1;
+        }
+        
+        .step-number {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #ccc;
+            color: white;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step.active .step-number {
+            background-color: var(--primary-color);
+        }
+        
+        .step.completed .step-number {
+            background-color: #28a745;
+        }
+        
+        .step-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .step-description {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+        
+        .progress-container {
+            margin-top: 1rem;
+        }
+        
+        .progress {
+            height: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-people-fill me-2"></i>
+                CRM Lui Bambini
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="refreshData">
+                            <i class="bi bi-arrow-clockwise"></i> Atualizar Dados
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#dashboard" data-bs-toggle="tab">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#clientes" data-bs-toggle="tab">
+                            <i class="bi bi-people"></i> Clientes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#mensagens" data-bs-toggle="tab">
+                            <i class="bi bi-chat-left-text"></i> Mensagens
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#estatisticas" data-bs-toggle="tab">
+                            <i class="bi bi-bar-chart"></i> Estatísticas
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#importacao" data-bs-toggle="tab">
+                            <i class="bi bi-upload"></i> Importação
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 content">
+                <div class="tab-content">
+                    <!-- Dashboard Tab -->
+                    <div class="tab-pane fade show active" id="dashboard">
+                        <h2 class="mb-4">Dashboard</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card stat-card">
+                                    <i class="bi bi-people-fill"></i>
+                                    <div class="stat-value" id="totalClientes">--</div>
+                                    <div class="stat-label">Total de Clientes</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card stat-card">
+                                    <i class="bi bi-cart-check-fill"></i>
+                                    <div class="stat-value" id="clientesAtivos">--</div>
+                                    <div class="stat-label">Clientes Ativos (últimos 60 dias)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card stat-card">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    <div class="stat-value" id="clientesRisco">--</div>
+                                    <div class="stat-label">Clientes em Risco (61-180 dias)</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <div class="card stat-card">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                    <div class="stat-value" id="clientesInativos">--</div>
+                                    <div class="stat-label">Clientes Inativos (>180 dias)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-lg-8">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-clock-history me-2"></i>
+                                        Distribuição de Clientes por Tempo desde Última Compra
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="chartDistribuicao"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-bell-fill me-2"></i>
+                                        Clientes que Precisam de Atenção
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <ul class="list-group list-group-flush" id="clientesAtencao">
+                                            <li class="list-group-item text-center py-5">
+                                                <div class="spinner-border text-primary" role="status">
+                                                    <span class="visually-hidden">Carregando...</span>
+                                                </div>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Clientes Tab -->
+                    <div class="tab-pane fade" id="clientes">
+                        <h2 class="mb-4">Clientes</h2>
+                        
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="search-container mb-3">
+                                            <i class="bi bi-search"></i>
+                                            <input type="text" class="form-control search-input" id="searchCliente" placeholder="Buscar cliente por nome ou CPF...">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="d-flex justify-content-md-end">
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-outline-primary filter-btn active" data-filter="todos">Todos</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="30d">Últimos 30 dias</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="60d">31-60 dias</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="90d">61-90 dias</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="180d">91-180 dias</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="365d">181-365 dias</button>
+                                                <button type="button" class="btn btn-outline-primary filter-btn" data-filter="365d-plus">+365 dias</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-body p-0">
+                                <div class="table-container">
+                                    <table class="table table-hover" id="tabelaClientes">
+                                        <thead>
+                                            <tr>
+                                                <th>Nome</th>
+                                                <th>CPF</th>
+                                                <th>Telefone</th>
+                                                <th>Última Compra</th>
+                                                <th>Dias Inativo</th>
+                                                <th>Categoria</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="7" class="text-center py-5">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Carregando...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mensagens Tab -->
+                    <div class="tab-pane fade" id="mensagens">
+                        <h2 class="mb-4">Mensagens Personalizadas</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-success text-white">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        Clientes Ativos (Últimos 30 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>, tudo bem?</p>
+                                            <p>Obrigado pela sua compra recente em nossa loja! Esperamos que esteja aproveitando seus produtos.</p>
+                                            <p>Estamos à disposição para qualquer dúvida ou necessidade.</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-info text-white">
+                                        <i class="bi bi-info-circle-fill me-2"></i>
+                                        Clientes Ativos (31-60 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>, como vai?</p>
+                                            <p>Já faz <strong>{dias}</strong> dias desde sua última visita à nossa loja. Sentimos sua falta!</p>
+                                            <p>Temos novidades que podem te interessar. Que tal passar para conferir?</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-warning text-dark">
+                                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                                        Clientes em Risco (61-90 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>!</p>
+                                            <p>Notamos que faz <strong>{dias}</strong> dias desde sua última compra conosco.</p>
+                                            <p>Estamos com uma seleção especial de produtos que combinam com seu perfil. Venha conferir nossas novidades!</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-orange text-white" style="background-color: #fd7e14;">
+                                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                        Clientes em Risco Elevado (91-180 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>, sentimos sua falta!</p>
+                                            <p>Já se passaram <strong>{dias}</strong> dias desde sua última visita à Lui Bambini.</p>
+                                            <p>Preparamos uma condição especial para seu retorno. Que tal nos visitar esta semana?</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-danger text-white">
+                                        <i class="bi bi-x-circle-fill me-2"></i>
+                                        Clientes Inativos (181-365 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>, quanto tempo!</p>
+                                            <p>Faz <strong>{dias}</strong> dias que não temos o prazer da sua visita em nossa loja.</p>
+                                            <p>Estamos com muitas novidades e um cupom de desconto especial para seu retorno. Venha nos visitar!</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100">
+                                    <div class="card-header bg-secondary text-white">
+                                        <i class="bi bi-x-octagon-fill me-2"></i>
+                                        Clientes Perdidos (Mais de 365 dias)
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="message-template">
+                                            <button class="btn btn-sm btn-outline-primary btn-copy">
+                                                <i class="bi bi-clipboard"></i> Copiar
+                                            </button>
+                                            <p>Olá <strong>{nome}</strong>, estamos com saudades!</p>
+                                            <p>Já faz mais de um ano desde sua última visita à Lui Bambini.</p>
+                                            <p>Gostaríamos muito de recebê-lo(a) novamente. Preparamos uma surpresa especial para seu retorno!</p>
+                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Estatísticas Tab -->
+                    <div class="tab-pane fade" id="estatisticas">
+                        <h2 class="mb-4">Estatísticas</h2>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-pie-chart-fill me-2"></i>
+                                        Distribuição de Clientes por Categoria
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="chartCategorias"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-4">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <i class="bi bi-graph-up me-2"></i>
+                                        Tendência de Inatividade
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="chart-container">
+                                            <canvas id="chartTendencia"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-table me-2"></i>
+                                Resumo por Categoria
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-container">
+                                    <table class="table" id="tabelaEstatisticas">
+                                        <thead>
+                                            <tr>
+                                                <th>Categoria</th>
+                                                <th>Quantidade</th>
+                                                <th>Porcentagem</th>
+                                                <th>Valor Médio Última Compra</th>
+                                                <th>Ação Recomendada</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td colspan="5" class="text-center py-5">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Carregando...</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Importação Tab -->
+                    <div class="tab-pane fade" id="importacao">
+                        <h2 class="mb-4">Importação de Dados</h2>
+                        
+                        <div class="step-indicator">
+                            <div class="step active" id="step1">
+                                <div class="step-number">1</div>
+                                <div class="step-title">Upload</div>
+                                <div class="step-description">Envie suas planilhas</div>
+                            </div>
+                            <div class="step" id="step2">
+                                <div class="step-number">2</div>
+                                <div class="step-title">Mapeamento</div>
+                                <div class="step-description">Configure as colunas</div>
+                            </div>
+                            <div class="step" id="step3">
+                                <div class="step-number">3</div>
+                                <div class="step-title">Processamento</div>
+                                <div class="step-description">Integração dos dados</div>
+                            </div>
+                            <div class="step" id="step4">
+                                <div class="step-number">4</div>
+                                <div class="step-title">Conclusão</div>
+                                <div class="step-description">Dados importados</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 1: Upload -->
+                        <div id="step1-content">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                                            Planilha de Vendas
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="upload-area" id="upload-vendas">
+                                                <input type="file" id="file-vendas" class="d-none" accept=".xlsx,.xls">
+                                                <i class="bi bi-cloud-arrow-up"></i>
+                                                <h4>Arraste e solte a planilha de vendas aqui</h4>
+                                                <p>ou clique para selecionar o arquivo</p>
+                                                <div id="vendas-file-info" class="mt-3"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100">
+                                        <div class="card-header">
+                                            <i class="bi bi-file-earmark-person me-2"></i>
+                                            Planilha de Clientes
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="upload-area" id="upload-clientes">
+                                                <input type="file" id="file-clientes" class="d-none" accept=".xlsx,.xls">
+                                                <i class="bi bi-cloud-arrow-up"></i>
+                                                <h4>Arraste e solte a planilha de clientes aqui</h4>
+                                                <p>ou clique para selecionar o arquivo</p>
+                                                <div id="clientes-file-info" class="mt-3"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-end">
+                                <button class="btn btn-primary" id="btn-step1-next" disabled>
+                                    Próximo <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2: Mapeamento -->
+                        <div id="step2-content" class="d-none">
+                            <div class="row">
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-file-earmark-spreadsheet me-2"></i>
+                                            Mapeamento da Planilha de Vendas
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="preview-table mb-3">
+                                                <table class="table table-sm table-bordered" id="preview-vendas">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <!-- Cabeçalhos serão adicionados dinamicamente -->
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Dados serão adicionados dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="column-mapping">
+                                                <h5 class="mb-3">Selecione as colunas correspondentes:</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Data:</label>
+                                                    <select class="form-select" id="map-vendas-data"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Movimentação:</label>
+                                                    <select class="form-select" id="map-vendas-movimentacao"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Quantidade de Produtos:</label>
+                                                    <select class="form-select" id="map-vendas-quantidade"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Total:</label>
+                                                    <select class="form-select" id="map-vendas-total"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Cliente:</label>
+                                                    <select class="form-select" id="map-vendas-cliente"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Vendedor:</label>
+                                                    <select class="form-select" id="map-vendas-vendedor"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone:</label>
+                                                    <select class="form-select" id="map-vendas-telefone"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Custo de Venda:</label>
+                                                    <select class="form-select" id="map-vendas-custo"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Lucro de Venda:</label>
+                                                    <select class="form-select" id="map-vendas-lucro"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-4">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <i class="bi bi-file-earmark-person me-2"></i>
+                                            Mapeamento da Planilha de Clientes
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="preview-table mb-3">
+                                                <table class="table table-sm table-bordered" id="preview-clientes">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <!-- Cabeçalhos serão adicionados dinamicamente -->
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <!-- Dados serão adicionados dinamicamente -->
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            
+                                            <div class="column-mapping">
+                                                <h5 class="mb-3">Selecione as colunas correspondentes:</h5>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">ID (third_id):</label>
+                                                    <select class="form-select" id="map-clientes-id"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Nome:</label>
+                                                    <select class="form-select" id="map-clientes-nome"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">CPF:</label>
+                                                    <select class="form-select" id="map-clientes-cpf"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 1:</label>
+                                                    <select class="form-select" id="map-clientes-telefone1"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 2:</label>
+                                                    <select class="form-select" id="map-clientes-telefone2"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 3:</label>
+                                                    <select class="form-select" id="map-clientes-telefone3"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Data de Cadastro:</label>
+                                                    <select class="form-select" id="map-clientes-data-cadastro"></select>
+                                                </div>
+                                                
+                                                <div class="mb-3">
+                                                    <label class="form-label">Crédito na Loja:</label>
+                                                    <select class="form-select" id="map-clientes-credito"></select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between">
+                                <button class="btn btn-secondary" id="btn-step2-prev">
+                                    <i class="bi bi-arrow-left"></i> Anterior
+                                </button>
+                                <button class="btn btn-primary" id="btn-step2-next">
+                                    Próximo <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3: Processamento -->
+                        <div id="step3-content" class="d-none">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-gear-fill me-2"></i>
+                                    Processamento de Dados
+                                </div>
+                                <div class="card-body">
+                                    <div class="text-center mb-4">
+                                        <i class="bi bi-arrow-repeat fs-1 text-primary"></i>
+                                        <h4 class="mt-3">Processando os dados...</h4>
+                                        <p class="text-muted">Isso pode levar alguns minutos, dependendo do tamanho das planilhas.</p>
+                                    </div>
+                                    
+                                    <div class="progress-container">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span id="progress-text">Iniciando processamento...</span>
+                                            <span id="progress-percentage">0%</span>
+                                        </div>
+                                        <div class="progress">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated" id="progress-bar" role="progressbar" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mt-4">
+                                        <h5>Etapas:</h5>
+                                        <ul class="list-group" id="processing-steps">
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Carregando dados das planilhas
+                                                <span class="badge bg-secondary rounded-pill" id="step-loading">Pendente</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Integrando dados de vendas e clientes
+                                                <span class="badge bg-secondary rounded-pill" id="step-integrating">Pendente</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Calculando tempo desde última compra
+                                                <span class="badge bg-secondary rounded-pill" id="step-calculating">Pendente</span>
+                                            </li>
+                                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                Salvando dados no banco de dados
+                                                <span class="badge bg-secondary rounded-pill" id="step-saving">Pendente</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" id="btn-step3-prev" disabled>
+                                    <i class="bi bi-arrow-left"></i> Anterior
+                                </button>
+                                <button class="btn btn-primary" id="btn-step3-next" disabled>
+                                    Próximo <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 4: Conclusão -->
+                        <div id="step4-content" class="d-none">
+                            <div class="card">
+                                <div class="card-header">
+                                    <i class="bi bi-check-circle-fill me-2"></i>
+                                    Importação Concluída
+                                </div>
+                                <div class="card-body text-center">
+                                    <i class="bi bi-check-circle-fill fs-1 text-success mb-3"></i>
+                                    <h3>Dados importados com sucesso!</h3>
+                                    <p class="text-muted">Os dados foram processados e estão disponíveis no sistema.</p>
+                                    
+                                    <div class="row mt-4">
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h4 id="total-clientes-importados">0</h4>
+                                                    <p>Clientes Importados</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h4 id="total-vendas-importadas">0</h4>
+                                                    <p>Vendas Importadas</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="card bg-light">
+                                                <div class="card-body text-center">
+                                                    <h4 id="total-ultima-compra">0</h4>
+                                                    <p>Registros de Última Compra</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between mt-4">
+                                <button class="btn btn-secondary" id="btn-nova-importacao">
+                                    <i class="bi bi-arrow-repeat"></i> Nova Importação
+                                </button>
+                                <button class="btn btn-primary" id="btn-ir-dashboard">
+                                    Ir para Dashboard <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Detalhes do Cliente -->
+    <div class="modal fade" id="clienteModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Informações Pessoais</h6>
+                            <p><strong>Nome:</strong> <span id="modalNome"></span></p>
+                            <p><strong>CPF:</strong> <span id="modalCpf"></span></p>
+                            <p><strong>Telefone:</strong> <span id="modalTelefone"></span></p>
+                            <p><strong>Data de Cadastro:</strong> <span id="modalDataCadastro"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Informações de Compra</h6>
+                            <p><strong>Última Compra:</strong> <span id="modalUltimaCompra"></span></p>
+                            <p><strong>Dias Inativo:</strong> <span id="modalDiasInativo"></span></p>
+                            <p><strong>Categoria:</strong> <span id="modalCategoria"></span></p>
+                            <p><strong>Valor Última Compra:</strong> <span id="modalValorCompra"></span></p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Mensagem Personalizada</h6>
+                    <div class="message-template" id="modalMensagem">
+                        <button class="btn btn-sm btn-outline-primary btn-copy">
+                            <i class="bi bi-clipboard"></i> Copiar
+                        </button>
+                        <div id="modalMensagemTexto"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        // Inicialização do Supabase
+        const supabaseUrl = 'https://ldjfxeyyyxnhffobijmf.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkamZ4ZXl5eXhuaGZmb2Jpam1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzM0MDAsImV4cCI6MjA3NDgwOTQwMH0.fwBzK0FBMfNCGh6Xyajkj7D5sV9Lw4a9JIWsIqPRenk';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Variáveis globais
+        let clientes = [];
+        let ultimasCompras = [];
+        let estatisticas = {
+            categorias: {},
+            total: 0
+        };
+        
+        // Variáveis para importação
+        let dadosVendas = null;
+        let dadosClientes = null;
+        let colunasVendas = [];
+        let colunasClientes = [];
+        let mapeamentoVendas = {};
+        let mapeamentoClientes = {};
+        
+        // Cores para os gráficos
+        const cores = {
+            '30d': '#28a745',
+            '60d': '#17a2b8',
+            '90d': '#ffc107',
+            '180d': '#fd7e14',
+            '365d': '#dc3545',
+            '365d-plus': '#6c757d'
+        };
+
+        // Função para formatar data
+        function formatarData(dataString) {
+            if (!dataString) return '-';
+            const data = new Date(dataString);
+            return data.toLocaleDateString('pt-BR');
+        }
+
+        // Função para formatar valor monetário
+        function formatarValor(valor) {
+            if (valor === null || valor === undefined) return 'R$ 0,00';
+            return `R$ ${parseFloat(valor).toFixed(2).replace('.', ',')}`;
+        }
+
+        // Função para obter badge de categoria
+        function getBadgeCategoria(categoria) {
+            let badgeClass = '';
+            switch (categoria) {
+                case 'Últimos 30 dias':
+                    badgeClass = 'badge-30d';
+                    break;
+                case '31-60 dias':
+                    badgeClass = 'badge-60d';
+                    break;
+                case '61-90 dias':
+                    badgeClass = 'badge-90d';
+                    break;
+                case '91-180 dias':
+                    badgeClass = 'badge-180d';
+                    break;
+                case '181-365 dias':
+                    badgeClass = 'badge-365d';
+                    break;
+                case 'Mais de 365 dias':
+                    badgeClass = 'badge-365d-plus';
+                    break;
+                default:
+                    badgeClass = 'bg-secondary';
+            }
+            return `<span class="badge badge-category ${badgeClass}">${categoria}</span>`;
+        }
+
+        // Função para obter mensagem personalizada
+        function getMensagemPersonalizada(cliente) {
+            let mensagem = '';
+            const nome = cliente.cliente_nome || 'Cliente';
+            const dias = cliente.dias_desde_ultima_compra || 0;
+            
+            switch (cliente.categoria_tempo) {
+                case 'Últimos 30 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>, tudo bem?</p>
+                                <p>Obrigado pela sua compra recente em nossa loja! Esperamos que esteja aproveitando seus produtos.</p>
+                                <p>Estamos à disposição para qualquer dúvida ou necessidade.</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                case '31-60 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>, como vai?</p>
+                                <p>Já faz <strong>${dias}</strong> dias desde sua última visita à nossa loja. Sentimos sua falta!</p>
+                                <p>Temos novidades que podem te interessar. Que tal passar para conferir?</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                case '61-90 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>!</p>
+                                <p>Notamos que faz <strong>${dias}</strong> dias desde sua última compra conosco.</p>
+                                <p>Estamos com uma seleção especial de produtos que combinam com seu perfil. Venha conferir nossas novidades!</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                case '91-180 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>, sentimos sua falta!</p>
+                                <p>Já se passaram <strong>${dias}</strong> dias desde sua última visita à Lui Bambini.</p>
+                                <p>Preparamos uma condição especial para seu retorno. Que tal nos visitar esta semana?</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                case '181-365 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>, quanto tempo!</p>
+                                <p>Faz <strong>${dias}</strong> dias que não temos o prazer da sua visita em nossa loja.</p>
+                                <p>Estamos com muitas novidades e um cupom de desconto especial para seu retorno. Venha nos visitar!</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                case 'Mais de 365 dias':
+                    mensagem = `<p>Olá <strong>${nome}</strong>, estamos com saudades!</p>
+                                <p>Já faz mais de um ano desde sua última visita à Lui Bambini.</p>
+                                <p>Gostaríamos muito de recebê-lo(a) novamente. Preparamos uma surpresa especial para seu retorno!</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+                    break;
+                default:
+                    mensagem = `<p>Olá <strong>${nome}</strong>!</p>
+                                <p>Gostaríamos de convidá-lo(a) para conhecer nossa loja e nossas novidades.</p>
+                                <p>Atenciosamente,<br>Equipe Lui Bambini</p>`;
+            }
+            
+            return mensagem;
+        }
+
+        // Função para carregar dados do Supabase
+        async function carregarDados() {
+            try {
+                // Carregar clientes
+                const { data: dataClientes, error: errorClientes } = await supabase
+                    .from('clientes')
+                    .select('*');
+                
+                if (errorClientes) throw errorClientes;
+                
+                // Carregar últimas compras
+                const { data: dataUltimasCompras, error: errorUltimasCompras } = await supabase
+                    .from('ultima_compra')
+                    .select('*');
+                
+                if (errorUltimasCompras) throw errorUltimasCompras;
+                
+                // Processar dados
+                clientes = dataClientes || [];
+                ultimasCompras = dataUltimasCompras || [];
+                
+                // Calcular estatísticas
+                calcularEstatisticas();
+                
+                // Atualizar interface
+                atualizarDashboard();
+                atualizarTabelaClientes();
+                atualizarEstatisticas();
+                
+                console.log('Dados carregados com sucesso!');
+            } catch (error) {
+                console.error('Erro ao carregar dados:', error);
+                alert('Erro ao carregar dados. Por favor, tente novamente.');
+            }
+        }
+
+        // Função para calcular estatísticas
+        function calcularEstatisticas() {
+            estatisticas = {
+                categorias: {
+                    'Últimos 30 dias': 0,
+                    '31-60 dias': 0,
+                    '61-90 dias': 0,
+                    '91-180 dias': 0,
+                    '181-365 dias': 0,
+                    'Mais de 365 dias': 0,
+                    'Sem compras': 0
+                },
+                total: ultimasCompras.length,
+                valorMedio: {}
+            };
+            
+            // Calcular quantidade por categoria
+            ultimasCompras.forEach(compra => {
+                const categoria = compra.categoria_tempo || 'Sem compras';
+                estatisticas.categorias[categoria] = (estatisticas.categorias[categoria] || 0) + 1;
+                
+                // Calcular valor médio por categoria
+                if (!estatisticas.valorMedio[categoria]) {
+                    estatisticas.valorMedio[categoria] = {
+                        soma: 0,
+                        quantidade: 0
+                    };
+                }
+                
+                estatisticas.valorMedio[categoria].soma += parseFloat(compra.total_ultima_compra || 0);
+                estatisticas.valorMedio[categoria].quantidade += 1;
+            });
+            
+            // Calcular médias
+            Object.keys(estatisticas.valorMedio).forEach(categoria => {
+                const { soma, quantidade } = estatisticas.valorMedio[categoria];
+                estatisticas.valorMedio[categoria] = quantidade > 0 ? soma / quantidade : 0;
+            });
+        }
+
+        // Função para atualizar o dashboard
+        function atualizarDashboard() {
+            // Atualizar contadores
+            document.getElementById('totalClientes').textContent = clientes.length;
+            document.getElementById('clientesAtivos').textContent = 
+                (estatisticas.categorias['Últimos 30 dias'] || 0) + 
+                (estatisticas.categorias['31-60 dias'] || 0);
+            document.getElementById('clientesRisco').textContent = 
+                (estatisticas.categorias['61-90 dias'] || 0) + 
+                (estatisticas.categorias['91-180 dias'] || 0);
+            document.getElementById('clientesInativos').textContent = 
+                (estatisticas.categorias['181-365 dias'] || 0) + 
+                (estatisticas.categorias['Mais de 365 dias'] || 0);
+            
+            // Atualizar gráfico de distribuição
+            const ctx = document.getElementById('chartDistribuicao').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(estatisticas.categorias).filter(cat => cat !== 'Sem compras'),
+                    datasets: [{
+                        label: 'Quantidade de Clientes',
+                        data: Object.keys(estatisticas.categorias)
+                            .filter(cat => cat !== 'Sem compras')
+                            .map(cat => estatisticas.categorias[cat]),
+                        backgroundColor: [
+                            cores['30d'],
+                            cores['60d'],
+                            cores['90d'],
+                            cores['180d'],
+                            cores['365d'],
+                            cores['365d-plus']
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                precision: 0
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Atualizar lista de clientes que precisam de atenção
+            const clientesRisco = ultimasCompras
+                .filter(c => ['61-90 dias', '91-180 dias'].includes(c.categoria_tempo))
+                .sort((a, b) => b.dias_desde_ultima_compra - a.dias_desde_ultima_compra)
+                .slice(0, 5);
+            
+            const listaHTML = clientesRisco.length > 0 
+                ? clientesRisco.map(cliente => `
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>${cliente.cliente_nome}</strong>
+                                <br>
+                                <small class="text-muted">${cliente.dias_desde_ultima_compra} dias sem comprar</small>
+                            </div>
+                            <span class="badge badge-category ${cliente.categoria_tempo === '61-90 dias' ? 'badge-90d' : 'badge-180d'}">${cliente.categoria_tempo}</span>
+                        </div>
+                    </li>
+                `).join('')
+                : '<li class="list-group-item text-center">Nenhum cliente em situação de risco</li>';
+            
+            document.getElementById('clientesAtencao').innerHTML = listaHTML;
+        }
+
+        // Função para atualizar a tabela de clientes
+        function atualizarTabelaClientes(filtro = 'todos', busca = '') {
+            let clientesFiltrados = ultimasCompras;
+            
+            // Aplicar filtro de categoria
+            if (filtro !== 'todos') {
+                const categorias = {
+                    '30d': 'Últimos 30 dias',
+                    '60d': '31-60 dias',
+                    '90d': '61-90 dias',
+                    '180d': '91-180 dias',
+                    '365d': '181-365 dias',
+                    '365d-plus': 'Mais de 365 dias'
+                };
+                
+                clientesFiltrados = clientesFiltrados.filter(c => c.categoria_tempo === categorias[filtro]);
+            }
+            
+            // Aplicar busca
+            if (busca) {
+                const termoBusca = busca.toLowerCase();
+                clientesFiltrados = clientesFiltrados.filter(c => 
+                    (c.cliente_nome && c.cliente_nome.toLowerCase().includes(termoBusca)) || 
+                    (c.cliente_cpf && c.cliente_cpf.toLowerCase().includes(termoBusca))
+                );
+            }
+            
+            // Ordenar por dias desde última compra (decrescente)
+            clientesFiltrados.sort((a, b) => b.dias_desde_ultima_compra - a.dias_desde_ultima_compra);
+            
+            // Gerar HTML da tabela
+            const tbody = document.querySelector('#tabelaClientes tbody');
+            
+            if (clientesFiltrados.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = clientesFiltrados.map(cliente => `
+                <tr>
+                    <td>${cliente.cliente_nome || '-'}</td>
+                    <td>${cliente.cliente_cpf || '-'}</td>
+                    <td>${getClienteTelefone(cliente.cliente_id) || '-'}</td>
+                    <td>${formatarData(cliente.data_ultima_compra)}</td>
+                    <td>${cliente.dias_desde_ultima_compra || '-'}</td>
+                    <td>${getBadgeCategoria(cliente.categoria_tempo || 'Sem compras')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary btn-detalhes" data-id="${cliente.id}">
+                            <i class="bi bi-eye"></i> Detalhes
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            // Adicionar event listeners para botões de detalhes
+            document.querySelectorAll('.btn-detalhes').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-id');
+                    const cliente = ultimasCompras.find(c => c.id == id);
+                    if (cliente) {
+                        mostrarDetalhesCliente(cliente);
+                    }
+                });
+            });
+        }
+
+        // Função para obter telefone do cliente
+        function getClienteTelefone(clienteId) {
+            const cliente = clientes.find(c => c.id === clienteId);
+            return cliente ? (cliente.telefone_1 || cliente.telefone_2 || cliente.telefone_3 || '-') : '-';
+        }
+
+        // Função para mostrar detalhes do cliente
+        function mostrarDetalhesCliente(cliente) {
+            const clienteCompleto = clientes.find(c => c.id === cliente.cliente_id) || {};
+            
+            // Preencher modal
+            document.getElementById('modalNome').textContent = cliente.cliente_nome || '-';
+            document.getElementById('modalCpf').textContent = cliente.cliente_cpf || '-';
+            document.getElementById('modalTelefone').textContent = getClienteTelefone(cliente.cliente_id);
+            document.getElementById('modalDataCadastro').textContent = formatarData(clienteCompleto.data_cadastro);
+            document.getElementById('modalUltimaCompra').textContent = formatarData(cliente.data_ultima_compra);
+            document.getElementById('modalDiasInativo').textContent = cliente.dias_desde_ultima_compra || '-';
+            document.getElementById('modalCategoria').textContent = cliente.categoria_tempo || 'Sem compras';
+            document.getElementById('modalValorCompra').textContent = formatarValor(cliente.total_ultima_compra);
+            
+            // Gerar mensagem personalizada
+            document.getElementById('modalMensagemTexto').innerHTML = getMensagemPersonalizada(cliente);
+            
+            // Mostrar modal
+            const modal = new bootstrap.Modal(document.getElementById('clienteModal'));
+            modal.show();
+        }
+
+        // Função para atualizar estatísticas
+        function atualizarEstatisticas() {
+            // Atualizar gráfico de categorias
+            const ctxCategorias = document.getElementById('chartCategorias').getContext('2d');
+            new Chart(ctxCategorias, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(estatisticas.categorias).filter(cat => cat !== 'Sem compras'),
+                    datasets: [{
+                        data: Object.keys(estatisticas.categorias)
+                            .filter(cat => cat !== 'Sem compras')
+                            .map(cat => estatisticas.categorias[cat]),
+                        backgroundColor: [
+                            cores['30d'],
+                            cores['60d'],
+                            cores['90d'],
+                            cores['180d'],
+                            cores['365d'],
+                            cores['365d-plus']
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+            
+            // Atualizar gráfico de tendência
+            const ctxTendencia = document.getElementById('chartTendencia').getContext('2d');
+            new Chart(ctxTendencia, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'],
+                    datasets: [{
+                        label: 'Clientes Ativos',
+                        data: [65, 70, 68, 72, 75, 80],
+                        borderColor: cores['30d'],
+                        backgroundColor: 'transparent'
+                    }, {
+                        label: 'Clientes em Risco',
+                        data: [25, 23, 27, 24, 22, 20],
+                        borderColor: cores['90d'],
+                        backgroundColor: 'transparent'
+                    }, {
+                        label: 'Clientes Inativos',
+                        data: [10, 7, 5, 4, 3, 0],
+                        borderColor: cores['365d'],
+                        backgroundColor: 'transparent'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+            
+            // Atualizar tabela de estatísticas
+            const tbody = document.querySelector('#tabelaEstatisticas tbody');
+            const categorias = Object.keys(estatisticas.categorias).filter(cat => cat !== 'Sem compras');
+            
+            tbody.innerHTML = categorias.map(categoria => {
+                const quantidade = estatisticas.categorias[categoria] || 0;
+                const porcentagem = estatisticas.total > 0 
+                    ? ((quantidade / estatisticas.total) * 100).toFixed(1) 
+                    : '0.0';
+                const valorMedio = estatisticas.valorMedio[categoria] || 0;
+                
+                let acaoRecomendada = '';
+                switch (categoria) {
+                    case 'Últimos 30 dias':
+                        acaoRecomendada = 'Enviar mensagem de agradecimento';
+                        break;
+                    case '31-60 dias':
+                        acaoRecomendada = 'Enviar novidades e promoções';
+                        break;
+                    case '61-90 dias':
+                        acaoRecomendada = 'Oferecer desconto para retorno';
+                        break;
+                    case '91-180 dias':
+                        acaoRecomendada = 'Contato telefônico + desconto especial';
+                        break;
+                    case '181-365 dias':
+                        acaoRecomendada = 'Campanha de recuperação com oferta exclusiva';
+                        break;
+                    case 'Mais de 365 dias':
+                        acaoRecomendada = 'Programa de reativação com brinde';
+                        break;
+                }
+                
+                return `
+                    <tr>
+                        <td>${getBadgeCategoria(categoria)}</td>
+                        <td>${quantidade}</td>
+                        <td>${porcentagem}%</td>
+                        <td>${formatarValor(valorMedio)}</td>
+                        <td>${acaoRecomendada}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Funções para importação de dados
+        
+        // Função para ler arquivo Excel
+        function lerArquivoExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                        
+                        // Extrair cabeçalhos (primeira linha)
+                        const headers = jsonData[0];
+                        
+                        // Extrair dados (demais linhas)
+                        const rows = jsonData.slice(1);
+                        
+                        resolve({ headers, rows });
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    reject(error);
+                };
+                
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // Função para preencher tabela de preview
+        function preencherTabelaPreview(tableId, headers, rows) {
+            const table = document.getElementById(tableId);
+            const thead = table.querySelector('thead tr');
+            const tbody = table.querySelector('tbody');
+            
+            // Limpar tabela
+            thead.innerHTML = '<th>#</th>';
+            tbody.innerHTML = '';
+            
+            // Adicionar cabeçalhos
+            headers.forEach(header => {
+                thead.innerHTML += `<th>${header}</th>`;
+            });
+            
+            // Adicionar linhas (máximo 5)
+            const maxRows = Math.min(5, rows.length);
+            for (let i = 0; i < maxRows; i++) {
+                const row = rows[i];
+                let tr = '<tr>';
+                tr += `<td>${i + 1}</td>`;
+                
+                headers.forEach((_, j) => {
+                    tr += `<td>${row[j] || ''}</td>`;
+                });
+                
+                tr += '</tr>';
+                tbody.innerHTML += tr;
+            }
+        }
+        
+        // Função para preencher selects de mapeamento
+        function preencherSelectsMapeamento(tipo, headers) {
+            const selects = document.querySelectorAll(`[id^="map-${tipo}-"]`);
+            
+            selects.forEach(select => {
+                // Limpar select
+                select.innerHTML = '<option value="">Selecione...</option>';
+                
+                // Adicionar opções
+                headers.forEach((header, index) => {
+                    select.innerHTML += `<option value="${index}">${header}</option>`;
+                });
+                
+                // Tentar mapear automaticamente
+                const campo = select.id.replace(`map-${tipo}-`, '');
+                const headerIndex = headers.findIndex(h => 
+                    h.toLowerCase().includes(campo.toLowerCase()) || 
+                    campo.toLowerCase().includes(h.toLowerCase())
+                );
+                
+                if (headerIndex !== -1) {
+                    select.value = headerIndex;
+                }
+            });
+        }
+        
+        // Função para processar dados importados
+        async function processarDadosImportados() {
+            try {
+                // Simular processamento
+                await atualizarProgresso(10, 'Carregando dados das planilhas...');
+                document.getElementById('step-loading').textContent = 'Em andamento';
+                document.getElementById('step-loading').className = 'badge bg-primary rounded-pill';
+                
+                // Extrair dados mapeados
+                const vendasProcessadas = dadosVendas.rows.map(row => {
+                    const venda = {};
+                    
+                    Object.keys(mapeamentoVendas).forEach(campo => {
+                        const indice = mapeamentoVendas[campo];
+                        if (indice !== undefined && indice !== '') {
+                            venda[campo] = row[indice];
+                        }
+                    });
+                    
+                    return venda;
+                });
+                
+                const clientesProcessados = dadosClientes.rows.map(row => {
+                    const cliente = {};
+                    
+                    Object.keys(mapeamentoClientes).forEach(campo => {
+                        const indice = mapeamentoClientes[campo];
+                        if (indice !== undefined && indice !== '') {
+                            cliente[campo] = row[indice];
+                        }
+                    });
+                    
+                    return cliente;
+                });
+                
+                await atualizarProgresso(30, 'Integrando dados de vendas e clientes...');
+                document.getElementById('step-loading').textContent = 'Concluído';
+                document.getElementById('step-loading').className = 'badge bg-success rounded-pill';
+                document.getElementById('step-integrating').textContent = 'Em andamento';
+                document.getElementById('step-integrating').className = 'badge bg-primary rounded-pill';
+                
+                // Simular integração de dados
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                await atualizarProgresso(50, 'Calculando tempo desde última compra...');
+                document.getElementById('step-integrating').textContent = 'Concluído';
+                document.getElementById('step-integrating').className = 'badge bg-success rounded-pill';
+                document.getElementById('step-calculating').textContent = 'Em andamento';
+                document.getElementById('step-calculating').className = 'badge bg-primary rounded-pill';
+                
+                // Simular cálculo de tempo
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                await atualizarProgresso(70, 'Salvando dados no banco de dados...');
+                document.getElementById('step-calculating').textContent = 'Concluído';
+                document.getElementById('step-calculating').className = 'badge bg-success rounded-pill';
+                document.getElementById('step-saving').textContent = 'Em andamento';
+                document.getElementById('step-saving').className = 'badge bg-primary rounded-pill';
+                
+                // Salvar dados no Supabase
+                // Aqui você implementaria a lógica real para salvar os dados no Supabase
+                
+                // Simular salvamento
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                await atualizarProgresso(100, 'Processamento concluído!');
+                document.getElementById('step-saving').textContent = 'Concluído';
+                document.getElementById('step-saving').className = 'badge bg-success rounded-pill';
+                
+                // Atualizar contadores na tela de conclusão
+                document.getElementById('total-clientes-importados').textContent = clientesProcessados.length;
+                document.getElementById('total-vendas-importadas').textContent = vendasProcessadas.length;
+                document.getElementById('total-ultima-compra').textContent = vendasProcessadas.length;
+                
+                // Habilitar botão de próximo
+                document.getElementById('btn-step3-next').disabled = false;
+                
+                // Recarregar dados do Supabase
+                await carregarDados();
+                
+                return true;
+            } catch (error) {
+                console.error('Erro ao processar dados:', error);
+                alert('Erro ao processar dados. Por favor, tente novamente.');
+                return false;
+            }
+        }
+        
+        // Função para atualizar progresso
+        async function atualizarProgresso(porcentagem, texto) {
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+            const progressPercentage = document.getElementById('progress-percentage');
+            
+            progressBar.style.width = `${porcentagem}%`;
+            progressText.textContent = texto;
+            progressPercentage.textContent = `${porcentagem}%`;
+            
+            // Simular processamento
+            await new Promise(resolve => setTimeout(resolve, 500));
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            // Carregar dados iniciais
+            carregarDados();
+            
+            // Botão de atualizar dados
+            document.getElementById('refreshData').addEventListener('click', carregarDados);
+            
+            // Filtros da tabela de clientes
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    const filtro = btn.getAttribute('data-filter');
+                    const busca = document.getElementById('searchCliente').value;
+                    atualizarTabelaClientes(filtro, busca);
+                });
+            });
+            
+            // Campo de busca
+            document.getElementById('searchCliente').addEventListener('input', (e) => {
+                const busca = e.target.value;
+                const filtroAtivo = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+                atualizarTabelaClientes(filtroAtivo, busca);
+            });
+            
+            // Botões de copiar mensagem
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('btn-copy') || e.target.closest('.btn-copy')) {
+                    const btn = e.target.classList.contains('btn-copy') ? e.target : e.target.closest('.btn-copy');
+                    const template = btn.closest('.message-template');
+                    const texto = template.querySelector('p') ? template.innerText.replace('Copiar', '').trim() : '';
+                    
+                    navigator.clipboard.writeText(texto).then(() => {
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="bi bi-check"></i> Copiado!';
+                        btn.classList.remove('btn-outline-primary');
+                        btn.classList.add('btn-success');
+                        
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                            btn.classList.remove('btn-success');
+                            btn.classList.add('btn-outline-primary');
+                        }, 2000);
+                    });
+                }
+            });
+            
+            // Configurar áreas de upload
+            ['vendas', 'clientes'].forEach(tipo => {
+                const uploadArea = document.getElementById(`upload-${tipo}`);
+                const fileInput = document.getElementById(`file-${tipo}`);
+                const fileInfo = document.getElementById(`${tipo}-file-info`);
+                
+                // Evento de clique na área de upload
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+                
+                // Eventos de drag and drop
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                });
+                
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('dragover');
+                });
+                
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                    
+                    if (e.dataTransfer.files.length > 0) {
+                        fileInput.files = e.dataTransfer.files;
+                        handleFileUpload(tipo, e.dataTransfer.files[0]);
+                    }
+                });
+                
+                // Evento de seleção de arquivo
+                fileInput.addEventListener('change', () => {
+                    if (fileInput.files.length > 0) {
+                        handleFileUpload(tipo, fileInput.files[0]);
+                    }
+                });
+                
+                // Função para lidar com o upload de arquivo
+                async function handleFileUpload(tipo, file) {
+                    try {
+                        // Verificar extensão do arquivo
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        if (!['xlsx', 'xls'].includes(extension)) {
+                            throw new Error('Formato de arquivo inválido. Por favor, selecione um arquivo Excel (.xlsx ou .xls).');
+                        }
+                        
+                        // Exibir informações do arquivo
+                        fileInfo.innerHTML = `
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-file-earmark-excel me-2"></i>
+                                <strong>${file.name}</strong> (${(file.size / 1024).toFixed(2)} KB)
+                                <div class="spinner-border spinner-border-sm ms-2" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Ler arquivo Excel
+                        const { headers, rows } = await lerArquivoExcel(file);
+                        
+                        // Armazenar dados
+                        if (tipo === 'vendas') {
+                            dadosVendas = { headers, rows };
+                            colunasVendas = headers;
+                        } else {
+                            dadosClientes = { headers, rows };
+                            colunasClientes = headers;
+                        }
+                        
+                        // Atualizar informações do arquivo
+                        fileInfo.innerHTML = `
+                            <div class="alert alert-success mb-0">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <strong>${file.name}</strong> - ${rows.length} registros carregados com sucesso
+                            </div>
+                        `;
+                        
+                        // Verificar se ambos os arquivos foram carregados
+                        if (dadosVendas && dadosClientes) {
+                            document.getElementById('btn-step1-next').disabled = false;
+                        }
+                    } catch (error) {
+                        console.error(`Erro ao processar arquivo ${tipo}:`, error);
+                        
+                        fileInfo.innerHTML = `
+                            <div class="alert alert-danger mb-0">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Erro:</strong> ${error.message}
+                            </div>
+                        `;
+                    }
+                }
+            });
+            
+            // Navegação entre etapas
+            document.getElementById('btn-step1-next').addEventListener('click', () => {
+                // Ocultar etapa atual
+                document.getElementById('step1-content').classList.add('d-none');
+                
+                // Mostrar próxima etapa
+                document.getElementById('step2-content').classList.remove('d-none');
+                
+                // Atualizar indicador de etapas
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
+                
+                // Preencher tabelas de preview
+                preencherTabelaPreview('preview-vendas', dadosVendas.headers, dadosVendas.rows);
+                preencherTabelaPreview('preview-clientes', dadosClientes.headers, dadosClientes.rows);
+                
+                // Preencher selects de mapeamento
+                preencherSelectsMapeamento('vendas', dadosVendas.headers);
+                preencherSelectsMapeamento('clientes', dadosClientes.headers);
+            });
+            
+            document.getElementById('btn-step2-prev').addEventListener('click', () => {
+                // Ocultar etapa atual
+                document.getElementById('step2-content').classList.add('d-none');
+                
+                // Mostrar etapa anterior
+                document.getElementById('step1-content').classList.remove('d-none');
+                
+                // Atualizar indicador de etapas
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step1').classList.remove('completed');
+                document.getElementById('step1').classList.add('active');
+            });
+            
+            document.getElementById('btn-step2-next').addEventListener('click', () => {
+                // Coletar mapeamentos
+                mapeamentoVendas = {
+                    data: document.getElementById('map-vendas-data').value,
+                    movimentacao: document.getElementById('map-vendas-movimentacao').value,
+                    quantidade: document.getElementById('map-vendas-quantidade').value,
+                    total: document.getElementById('map-vendas-total').value,
+                    cliente: document.getElementById('map-vendas-cliente').value,
+                    vendedor: document.getElementById('map-vendas-vendedor').value,
+                    telefone: document.getElementById('map-vendas-telefone').value,
+                    custo: document.getElementById('map-vendas-custo').value,
+                    lucro: document.getElementById('map-vendas-lucro').value
+                };
+                
+                mapeamentoClientes = {
+                    id: document.getElementById('map-clientes-id').value,
+                    nome: document.getElementById('map-clientes-nome').value,
+                    cpf: document.getElementById('map-clientes-cpf').value,
+                    telefone1: document.getElementById('map-clientes-telefone1').value,
+                    telefone2: document.getElementById('map-clientes-telefone2').value,
+                    telefone3: document.getElementById('map-clientes-telefone3').value,
+                    data_cadastro: document.getElementById('map-clientes-data-cadastro').value,
+                    credito: document.getElementById('map-clientes-credito').value
+                };
+                
+                // Verificar se os campos obrigatórios foram mapeados
+                const camposObrigatoriosVendas = ['data', 'cliente', 'total'];
+                const camposObrigatoriosClientes = ['nome', 'cpf', 'telefone1'];
+                
+                const faltamCamposVendas = camposObrigatoriosVendas.some(campo => 
+                    mapeamentoVendas[campo] === undefined || mapeamentoVendas[campo] === ''
+                );
+                
+                const faltamCamposClientes = camposObrigatoriosClientes.some(campo => 
+                    mapeamentoClientes[campo] === undefined || mapeamentoClientes[campo] === ''
+                );
+                
+                if (faltamCamposVendas || faltamCamposClientes) {
+                    alert('Por favor, mapeie todos os campos obrigatórios antes de continuar.');
+                    return;
+                }
+                
+                // Ocultar etapa atual
+                document.getElementById('step2-content').classList.add('d-none');
+                
+                // Mostrar próxima etapa
+                document.getElementById('step3-content').classList.remove('d-none');
+                
+                // Atualizar indicador de etapas
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step2').classList.add('completed');
+                document.getElementById('step3').classList.add('active');
+                
+                // Iniciar processamento
+                processarDadosImportados();
+            });
+            
+            document.getElementById('btn-step3-next').addEventListener('click', () => {
+                // Ocultar etapa atual
+                document.getElementById('step3-content').classList.add('d-none');
+                
+                // Mostrar próxima etapa
+                document.getElementById('step4-content').classList.remove('d-none');
+                
+                // Atualizar indicador de etapas
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step3').classList.add('completed');
+                document.getElementById('step4').classList.add('active');
+            });
+            
+            document.getElementById('btn-nova-importacao').addEventListener('click', () => {
+                // Resetar variáveis
+                dadosVendas = null;
+                dadosClientes = null;
+                colunasVendas = [];
+                colunasClientes = [];
+                mapeamentoVendas = {};
+                mapeamentoClientes = {};
+                
+                // Resetar formulários
+                document.getElementById('file-vendas').value = '';
+                document.getElementById('file-clientes').value = '';
+                document.getElementById('vendas-file-info').innerHTML = '';
+                document.getElementById('clientes-file-info').innerHTML = '';
+                document.getElementById('btn-step1-next').disabled = true;
+                
+                // Resetar indicadores de etapas
+                document.getElementById('step1').classList.add('active');
+                document.getElementById('step1').classList.remove('completed');
+                document.getElementById('step2').classList.remove('active', 'completed');
+                document.getElementById('step3').classList.remove('active', 'completed');
+                document.getElementById('step4').classList.remove('active', 'completed');
+                
+                // Resetar etapas de processamento
+                document.getElementById('step-loading').textContent = 'Pendente';
+                document.getElementById('step-loading').className = 'badge bg-secondary rounded-pill';
+                document.getElementById('step-integrating').textContent = 'Pendente';
+                document.getElementById('step-integrating').className = 'badge bg-secondary rounded-pill';
+                document.getElementById('step-calculating').textContent = 'Pendente';
+                document.getElementById('step-calculating').className = 'badge bg-secondary rounded-pill';
+                document.getElementById('step-saving').textContent = 'Pendente';
+                document.getElementById('step-saving').className = 'badge bg-secondary rounded-pill';
+                
+                // Resetar barra de progresso
+                document.getElementById('progress-bar').style.width = '0%';
+                document.getElementById('progress-text').textContent = 'Iniciando processamento...';
+                document.getElementById('progress-percentage').textContent = '0%';
+                
+                // Mostrar primeira etapa
+                document.getElementById('step1-content').classList.remove('d-none');
+                document.getElementById('step2-content').classList.add('d-none');
+                document.getElementById('step3-content').classList.add('d-none');
+                document.getElementById('step4-content').classList.add('d-none');
+            });
+            
+            document.getElementById('btn-ir-dashboard').addEventListener('click', () => {
+                // Mudar para a aba Dashboard
+                document.querySelector('.nav-link[href="#dashboard"]').click();
+            });
+        });
+    </script>
+</body>
+</html>

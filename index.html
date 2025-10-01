@@ -657,8 +657,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
     <script>
+        // Variáveis globais
+        let vendasFileInput, clientesFileInput;
+        
         // Funções de navegação e estado da aplicação
         function showPage(pageId) {
             document.querySelectorAll('.page').forEach(page => {
@@ -676,6 +679,10 @@
             console.log("DOM carregado, inicializando aplicação...");
             showPage('dashboard');
             
+            // Inicializar referências globais
+            vendasFileInput = document.getElementById("file-vendas");
+            clientesFileInput = document.getElementById("file-clientes");
+            
             // Carregar dados do localStorage se existirem
             const storedData = localStorage.getItem("crm_data");
             if (storedData) {
@@ -690,6 +697,9 @@
             
             // Inicializar os event listeners para navegação entre etapas
             inicializarNavegacaoEtapas();
+            
+            // Inicializar o botão de processamento
+            inicializarProcessamento();
         });
 
         // Inicializar os manipuladores de eventos para upload de arquivos
@@ -771,9 +781,6 @@
             const nextStep1Button = document.getElementById("next-step1");
             if (nextStep1Button) {
                 nextStep1Button.addEventListener("click", async () => {
-                    const vendasFileInput = document.getElementById("file-vendas");
-                    const clientesFileInput = document.getElementById("file-clientes");
-                    
                     if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
                         alert("Por favor, selecione os dois arquivos.");
                         return;
@@ -837,55 +844,111 @@
             showStep(0);
         }
 
-        // Lógica de processamento de dados
-        const processButton = document.getElementById("start-processing");
-        const processingLog = document.getElementById("processing-log");
+        // Inicializar o botão de processamento
+        function inicializarProcessamento() {
+            console.log("Inicializando processamento...");
+            
+            const processButton = document.getElementById("start-processing");
+            const processingLog = document.getElementById("processing-log");
+            const progressBar = document.getElementById("progress-bar");
 
-        function log(message, type = 'info') {
-            const logEntry = document.createElement('p');
-            logEntry.className = `log-${type}`;
-            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-            processingLog.appendChild(logEntry);
-            processingLog.scrollTop = processingLog.scrollHeight;
-        }
+            if (!processButton || !processingLog || !progressBar) {
+                console.error("Elementos de processamento não encontrados");
+                return;
+            }
 
-        if (processButton) {
+            function log(message, type = 'info') {
+                const logEntry = document.createElement('p');
+                logEntry.className = `log-${type}`;
+                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                processingLog.appendChild(logEntry);
+                processingLog.scrollTop = processingLog.scrollHeight;
+            }
+
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+                progressBar.textContent = `${percent}%`;
+                progressBar.setAttribute('aria-valuenow', percent);
+            }
+
             processButton.addEventListener('click', async () => {
-                const vendasFileInput = document.getElementById("file-vendas");
-                const clientesFileInput = document.getElementById("file-clientes");
-                
                 if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
                     log('Por favor, selecione os dois arquivos.', 'error');
                     return;
                 }
 
+                // Verificar se os campos de mapeamento foram selecionados
+                const requiredFields = [
+                    "map-vendas-data", 
+                    "map-vendas-cliente", 
+                    "map-clientes-nome"
+                ];
+                
+                let missingFields = false;
+                requiredFields.forEach(field => {
+                    const select = document.getElementById(field);
+                    if (!select || !select.value) {
+                        log(`Campo obrigatório não selecionado: ${field}`, 'error');
+                        missingFields = true;
+                    }
+                });
+                
+                if (missingFields) {
+                    log('Por favor, selecione todos os campos obrigatórios no mapeamento.', 'error');
+                    return;
+                }
+
+                // Desabilitar o botão durante o processamento
+                processButton.disabled = true;
+                
+                // Limpar o log e resetar a barra de progresso
+                processingLog.innerHTML = '';
+                updateProgress(0);
+                
                 log('Iniciando o processamento dos arquivos...');
+                updateProgress(10);
 
                 try {
+                    // Ler os arquivos
+                    log('Lendo arquivo de vendas...');
                     const vendasData = await readFile(vendasFileInput.files[0]);
+                    updateProgress(30);
+                    
+                    log('Lendo arquivo de clientes...');
                     const pessoasData = await readFile(clientesFileInput.files[0]);
+                    updateProgress(50);
 
                     log('Arquivos lidos com sucesso. Processando dados...', 'success');
+                    updateProgress(60);
 
+                    // Processar os dados
+                    log('Calculando dias de inatividade para cada cliente...');
                     const clientes = processarDados(vendasData, pessoasData);
+                    updateProgress(80);
 
                     log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
+                    updateProgress(90);
 
                     // Salvar no localStorage
                     localStorage.setItem('crm_data', JSON.stringify(clientes));
-
                     log('Dados salvos no armazenamento local.', 'success');
 
                     // Atualizar o dashboard
                     atualizarDashboard(clientes);
                     atualizarTabelaClientes(clientes);
-
                     log('Dashboard e tabelas atualizadas.', 'success');
+                    updateProgress(100);
+
+                    // Mostrar o botão de próximo
                     document.getElementById("next-step3").style.display = "block";
+                    
+                    // Reabilitar o botão
+                    processButton.disabled = false;
 
                 } catch (error) {
                     log(`Ocorreu um erro: ${error.message}`, 'error');
                     console.error(error);
+                    processButton.disabled = false;
                 }
             });
         }
@@ -947,6 +1010,10 @@
         }
 
         function processarDados(vendas, pessoas) {
+            console.log("Processando dados...");
+            console.log("Vendas:", vendas.length);
+            console.log("Pessoas:", pessoas.length);
+            
             const vendasPorCliente = {};
 
             const clienteField = document.getElementById("map-vendas-cliente").value;
@@ -957,6 +1024,12 @@
             const telefone2Field = document.getElementById("map-clientes-telefone2").value;
             const telefone3Field = document.getElementById("map-clientes-telefone3").value;
 
+            console.log("Campos mapeados:", {
+                clienteField, dataField, nomeField, cpfField, 
+                telefone1Field, telefone2Field, telefone3Field
+            });
+
+            // Agrupar vendas por cliente
             vendas.forEach(venda => {
                 const clienteNome = venda[clienteField];
                 if (!clienteNome) return;
@@ -967,17 +1040,53 @@
                 vendasPorCliente[clienteNome].push(venda);
             });
 
+            console.log("Clientes com vendas:", Object.keys(vendasPorCliente).length);
+
+            // Processar cada cliente
             const clientes = pessoas.map(pessoa => {
                 const nome = pessoa[nomeField];
+                if (!nome) {
+                    console.log("Cliente sem nome:", pessoa);
+                    return null;
+                }
+                
                 const vendasCliente = vendasPorCliente[nome] || [];
-                const ultimaVenda = vendasCliente.sort((a, b) => {
-                    const dateA = new Date(a[dataField]);
-                    const dateB = new Date(b[dataField]);
+                
+                // Ordenar vendas por data (mais recente primeiro)
+                const vendasOrdenadas = vendasCliente.sort((a, b) => {
+                    let dateA, dateB;
+                    
+                    try {
+                        dateA = a[dataField] instanceof Date ? a[dataField] : new Date(a[dataField]);
+                    } catch (e) {
+                        console.error("Erro ao converter data A:", a[dataField], e);
+                        dateA = new Date(0); // Data mínima em caso de erro
+                    }
+                    
+                    try {
+                        dateB = b[dataField] instanceof Date ? b[dataField] : new Date(b[dataField]);
+                    } catch (e) {
+                        console.error("Erro ao converter data B:", b[dataField], e);
+                        dateB = new Date(0); // Data mínima em caso de erro
+                    }
+                    
                     return dateB - dateA;
-                })[0];
-
-                const ultimaCompra = ultimaVenda ? new Date(ultimaVenda[dataField]) : null;
-                const diasInativo = ultimaCompra ? Math.floor((new Date() - ultimaCompra) / (1000 * 60 * 60 * 24)) : null;
+                });
+                
+                const ultimaVenda = vendasOrdenadas.length > 0 ? vendasOrdenadas[0] : null;
+                let ultimaCompra = null;
+                let diasInativo = null;
+                
+                if (ultimaVenda) {
+                    try {
+                        ultimaCompra = ultimaVenda[dataField] instanceof Date ? 
+                            ultimaVenda[dataField] : new Date(ultimaVenda[dataField]);
+                        
+                        diasInativo = Math.floor((new Date() - ultimaCompra) / (1000 * 60 * 60 * 24));
+                    } catch (e) {
+                        console.error("Erro ao processar última compra:", ultimaVenda[dataField], e);
+                    }
+                }
 
                 return {
                     nome: nome,
@@ -987,8 +1096,9 @@
                     diasInativo: diasInativo,
                     status: getStatus(diasInativo)
                 };
-            });
+            }).filter(cliente => cliente !== null);
 
+            console.log("Clientes processados:", clientes.length);
             return clientes;
         }
 
@@ -1003,6 +1113,8 @@
         }
 
         function atualizarDashboard(clientes) {
+            console.log("Atualizando dashboard com", clientes.length, "clientes");
+            
             const totalClientes = clientes.length;
             const clientesAtivos = clientes.filter(c => c.diasInativo !== null && c.diasInativo <= 60).length;
             const clientesInativos = clientes.filter(c => c.diasInativo !== null && c.diasInativo > 180).length;
@@ -1081,6 +1193,8 @@
         }
 
         function atualizarTabelaClientes(clientes) {
+            console.log("Atualizando tabela de clientes");
+            
             const tbody = document.getElementById('lista-clientes');
             if (!tbody) {
                 console.error('Elemento tbody lista-clientes não encontrado');

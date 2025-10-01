@@ -96,6 +96,52 @@
             background-color: #e9ecef;
             z-index: -1;
         }
+        .badge.bg-success {
+            background-color: #28a745 !important;
+        }
+        .badge.bg-primary {
+            background-color: #20c997 !important;
+        }
+        .badge.bg-warning {
+            background-color: #ffc107 !important;
+        }
+        .badge.bg-danger {
+            background-color: #dc3545 !important;
+        }
+        .badge.bg-secondary {
+            background-color: #6c757d !important;
+        }
+        .badge.bg-dark {
+            background-color: #343a40 !important;
+        }
+        .progress {
+            height: 25px;
+        }
+        .progress-bar {
+            line-height: 25px;
+            font-size: 14px;
+        }
+        #processing-log {
+            height: 200px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+        }
+        .log-info {
+            color: #0d6efd;
+        }
+        .log-success {
+            color: #198754;
+        }
+        .log-warning {
+            color: #ffc107;
+        }
+        .log-error {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -141,25 +187,25 @@
                     <div class="row">
                         <div class="col-md-3">
                             <div class="card stats-card">
-                                <h3>152</h3>
+                                <h3 id="clientes-ativos">0</h3>
                                 <p>Clientes Ativos</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card stats-card">
-                                <h3>48</h3>
+                                <h3 id="clientes-inativos">0</h3>
                                 <p>Clientes Inativos</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card stats-card">
-                                <h3>23</h3>
+                                <h3 id="clientes-risco">0</h3>
                                 <p>Clientes em Risco</p>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="card stats-card">
-                                <h3>75</h3>
+                                <h3 id="dias-medios">0</h3>
                                 <p>Dias Médios de Inatividade</p>
                             </div>
                         </div>
@@ -193,36 +239,9 @@
                                                     <th>Ação</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="clientes-atencao">
                                                 <tr>
-                                                    <td>Maria Silva</td>
-                                                    <td>15/07/2025</td>
-                                                    <td>78</td>
-                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>João Santos</td>
-                                                    <td>02/07/2025</td>
-                                                    <td>91</td>
-                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Ana Oliveira</td>
-                                                    <td>10/06/2025</td>
-                                                    <td>113</td>
-                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Carlos Pereira</td>
-                                                    <td>25/05/2025</td>
-                                                    <td>129</td>
-                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Lúcia Ferreira</td>
-                                                    <td>03/05/2025</td>
-                                                    <td>151</td>
-                                                    <td><button class="btn btn-sm btn-primary">Contatar</button></td>
+                                                    <td colspan="4" class="text-center">Nenhum dado disponível</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -240,21 +259,21 @@
                         <div class="card-header">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <input type="text" class="form-control" placeholder="Buscar cliente...">
+                                    <input type="text" class="form-control" id="busca-cliente" placeholder="Buscar cliente...">
                                 </div>
                                 <div class="col-md-4">
-                                    <select class="form-select">
-                                        <option>Todos os clientes</option>
-                                        <option>Ativos (últimos 30 dias)</option>
-                                        <option>Ativos (31-60 dias)</option>
-                                        <option>Em risco (61-90 dias)</option>
-                                        <option>Em risco elevado (91-180 dias)</option>
-                                        <option>Inativos (181-365 dias)</option>
-                                        <option>Perdidos (mais de 365 dias)</option>
+                                    <select class="form-select" id="filtro-categoria">
+                                        <option value="todos">Todos os clientes</option>
+                                        <option value="0-30">Ativos (últimos 30 dias)</option>
+                                        <option value="31-60">Ativos (31-60 dias)</option>
+                                        <option value="61-90">Em risco (61-90 dias)</option>
+                                        <option value="91-180">Em risco elevado (91-180 dias)</option>
+                                        <option value="181-365">Inativos (181-365 dias)</option>
+                                        <option value="365+">Perdidos (mais de 365 dias)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-2">
-                                    <button class="btn btn-primary w-100">Filtrar</button>
+                                    <button class="btn btn-primary w-100" id="btn-filtrar">Filtrar</button>
                                 </div>
                             </div>
                         </div>
@@ -272,77 +291,18 @@
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="lista-clientes">
                                         <tr>
-                                            <td>Maria Silva</td>
-                                            <td>123.456.789-00</td>
-                                            <td>(11) 98765-4321</td>
-                                            <td>15/07/2025</td>
-                                            <td>78</td>
-                                            <td><span class="badge bg-warning">Em risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">Detalhes</button>
-                                                <button class="btn btn-sm btn-primary">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>João Santos</td>
-                                            <td>987.654.321-00</td>
-                                            <td>(11) 91234-5678</td>
-                                            <td>02/07/2025</td>
-                                            <td>91</td>
-                                            <td><span class="badge bg-danger">Risco elevado</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">Detalhes</button>
-                                                <button class="btn btn-sm btn-primary">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Ana Oliveira</td>
-                                            <td>456.789.123-00</td>
-                                            <td>(11) 97654-3210</td>
-                                            <td>10/06/2025</td>
-                                            <td>113</td>
-                                            <td><span class="badge bg-danger">Risco elevado</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">Detalhes</button>
-                                                <button class="btn btn-sm btn-primary">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Carlos Pereira</td>
-                                            <td>789.123.456-00</td>
-                                            <td>(11) 95678-1234</td>
-                                            <td>25/05/2025</td>
-                                            <td>129</td>
-                                            <td><span class="badge bg-danger">Risco elevado</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">Detalhes</button>
-                                                <button class="btn btn-sm btn-primary">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Lúcia Ferreira</td>
-                                            <td>321.654.987-00</td>
-                                            <td>(11) 94321-8765</td>
-                                            <td>03/05/2025</td>
-                                            <td>151</td>
-                                            <td><span class="badge bg-danger">Risco elevado</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-info">Detalhes</button>
-                                                <button class="btn btn-sm btn-primary">Mensagem</button>
-                                            </td>
+                                            <td colspan="7" class="text-center">Nenhum dado disponível</td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             <nav>
-                                <ul class="pagination justify-content-center">
+                                <ul class="pagination justify-content-center" id="paginacao">
                                     <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
                                     <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">Próximo</a></li>
+                                    <li class="page-item disabled"><a class="page-link" href="#">Próximo</a></li>
                                 </ul>
                             </nav>
                         </div>
@@ -359,8 +319,8 @@
                                     <h5>Clientes Ativos (últimos 30 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>, tudo bem? Passando para agradecer pela sua compra recente em nossa loja. Esperamos que esteja satisfeito(a) com os produtos. Estamos à disposição para o que precisar!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>, tudo bem? Passando para agradecer pela sua compra recente em nossa loja. Esperamos que esteja satisfeito(a) com os produtos. Estamos à disposição para o que precisar!</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="0-30">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
@@ -370,8 +330,8 @@
                                     <h5>Clientes Ativos (31-60 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>! Já faz <strong>{dias}</strong> dias desde sua última visita à Lui Bambini. Estamos com novidades que podem te interessar! Quando puder, dê uma passadinha em nossa loja. Será um prazer atendê-lo(a) novamente!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>! Já faz <strong class="dias-inativo">45</strong> dias desde sua última visita à Lui Bambini. Estamos com novidades que podem te interessar! Quando puder, dê uma passadinha em nossa loja. Será um prazer atendê-lo(a) novamente!</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="31-60">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
@@ -381,8 +341,8 @@
                                     <h5>Clientes em Risco (61-90 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>! Sentimos sua falta! Já faz <strong>{dias}</strong> dias desde sua última compra conosco. Estamos com produtos novos que combinam com seu estilo. Que tal passar na Lui Bambini esta semana? Temos condições especiais para você!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>! Sentimos sua falta! Já faz <strong class="dias-inativo">75</strong> dias desde sua última compra conosco. Estamos com produtos novos que combinam com seu estilo. Que tal passar na Lui Bambini esta semana? Temos condições especiais para você!</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="61-90">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
@@ -394,30 +354,30 @@
                                     <h5>Clientes em Risco Elevado (91-180 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>! Estamos com saudades! Faz <strong>{dias}</strong> dias que não o(a) vemos em nossa loja. Preparamos uma surpresa especial para seu retorno: 10% de desconto na próxima compra! Venha conferir as novidades da Lui Bambini!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>! Estamos com saudades! Faz <strong class="dias-inativo">135</strong> dias que não o(a) vemos em nossa loja. Preparamos uma surpresa especial para seu retorno: 10% de desconto na próxima compra! Venha conferir as novidades da Lui Bambini!</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="91-180">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5>Clientes Inativos (181-365 dias)</h5>
+                                    <h5>Inativos (181-365 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>! Quanto tempo! Já faz <strong>{dias}</strong> dias desde sua última visita à Lui Bambini. Estamos com uma coleção completamente nova que gostaríamos muito de te mostrar. Preparamos um cupom especial de 15% de desconto para celebrar seu retorno!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>! Há quanto tempo! Faz mais de <strong class="dias-inativo">270</strong> dias que você não nos visita. Gostaríamos de saber se está tudo bem e se podemos fazer algo para tê-lo(a) de volta. Temos um presente exclusivo para você na sua próxima compra!</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="181-365">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5>Clientes Perdidos (mais de 365 dias)</h5>
+                                    <h5>Perdidos (mais de 365 dias)</h5>
                                 </div>
                                 <div class="card-body">
-                                    <p>Olá <strong>{nome}</strong>! A Lui Bambini mudou muito desde sua última visita há mais de um ano! Gostaríamos muito de revê-lo(a) e mostrar todas as novidades. Como cliente especial, preparamos um cupom de 20% de desconto para seu retorno. Ficaremos muito felizes em atendê-lo(a) novamente!</p>
-                                    <button class="btn btn-primary">Copiar Mensagem</button>
+                                    <p>Olá <strong class="nome-cliente">Cliente</strong>. Sentimos muito a sua falta. Gostaríamos de entender o motivo do seu afastamento e reconquistar sua confiança. Por favor, entre em contato conosco. A Lui Bambini valoriza muito sua preferência.</p>
+                                    <button class="btn btn-primary btn-copiar" data-categoria="365+">Copiar Mensagem</button>
                                 </div>
                             </div>
                         </div>
@@ -426,16 +386,16 @@
 
                 <!-- Estatísticas Page -->
                 <div id="estatisticas" class="page" style="display: none;">
-                    <h2 class="mb-4">Estatísticas</h2>
+                    <h2 class="mb-4">Estatísticas Detalhadas</h2>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="card">
                                 <div class="card-header">
-                                    <h5>Distribuição de Clientes por Tempo de Inatividade</h5>
+                                    <h5>Distribuição Percentual de Clientes</h5>
                                 </div>
                                 <div class="card-body">
                                     <div class="chart-container">
-                                        <canvas id="distributionChart"></canvas>
+                                        <canvas id="percentageChart"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -471,48 +431,9 @@
                                                     <th>Ação Recomendada</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="resumo-categorias">
                                                 <tr>
-                                                    <td>Ativos (últimos 30 dias)</td>
-                                                    <td>87</td>
-                                                    <td>39%</td>
-                                                    <td>15</td>
-                                                    <td>Mensagem de agradecimento</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Ativos (31-60 dias)</td>
-                                                    <td>65</td>
-                                                    <td>29%</td>
-                                                    <td>45</td>
-                                                    <td>Convite para retorno</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Em risco (61-90 dias)</td>
-                                                    <td>23</td>
-                                                    <td>10%</td>
-                                                    <td>75</td>
-                                                    <td>Oferta especial</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Em risco elevado (91-180 dias)</td>
-                                                    <td>18</td>
-                                                    <td>8%</td>
-                                                    <td>135</td>
-                                                    <td>Desconto de 10%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Inativos (181-365 dias)</td>
-                                                    <td>15</td>
-                                                    <td>7%</td>
-                                                    <td>270</td>
-                                                    <td>Desconto de 15%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Perdidos (mais de 365 dias)</td>
-                                                    <td>15</td>
-                                                    <td>7%</td>
-                                                    <td>450</td>
-                                                    <td>Desconto de 20%</td>
+                                                    <td colspan="5" class="text-center">Nenhum dado disponível</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -529,10 +450,10 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="step-indicator">
-                                <div class="step active">Upload</div>
-                                <div class="step">Mapeamento</div>
-                                <div class="step">Processamento</div>
-                                <div class="step">Conclusão</div>
+                                <div class="step active" id="step-upload">Upload</div>
+                                <div class="step" id="step-mapeamento">Mapeamento</div>
+                                <div class="step" id="step-processamento">Processamento</div>
+                                <div class="step" id="step-conclusao">Conclusão</div>
                             </div>
                             
                             <!-- Step 1: Upload -->
@@ -575,6 +496,157 @@
                                     <button id="next-step1" class="btn btn-primary">Próximo</button>
                                 </div>
                             </div>
+
+                            <!-- Step 2: Mapeamento -->
+                            <div id="step2-content" style="display: none;">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Mapeamento de Colunas - Vendas</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">Data</label>
+                                                    <select class="form-select" id="map-vendas-data">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Movimentação</label>
+                                                    <select class="form-select" id="map-vendas-movimentacao">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Quantidade</label>
+                                                    <select class="form-select" id="map-vendas-quantidade">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Total</label>
+                                                    <select class="form-select" id="map-vendas-total">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Cliente</label>
+                                                    <select class="form-select" id="map-vendas-cliente">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Vendedor</label>
+                                                    <select class="form-select" id="map-vendas-vendedor">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone</label>
+                                                    <select class="form-select" id="map-vendas-telefone">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="card">
+                                            <div class="card-header">
+                                                <h5>Mapeamento de Colunas - Clientes</h5>
+                                            </div>
+                                            <div class="card-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label">ID</label>
+                                                    <select class="form-select" id="map-clientes-id">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Nome</label>
+                                                    <select class="form-select" id="map-clientes-nome">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">CPF</label>
+                                                    <select class="form-select" id="map-clientes-cpf">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 1</label>
+                                                    <select class="form-select" id="map-clientes-telefone1">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 2</label>
+                                                    <select class="form-select" id="map-clientes-telefone2">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Telefone 3</label>
+                                                    <select class="form-select" id="map-clientes-telefone3">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label">Data de Cadastro</label>
+                                                    <select class="form-select" id="map-clientes-data-cadastro">
+                                                        <option value="">Selecione a coluna</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-3">
+                                    <button id="prev-step2" class="btn btn-secondary">Anterior</button>
+                                    <button id="next-step2" class="btn btn-primary">Próximo</button>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Processamento -->
+                            <div id="step3-content" style="display: none;">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Processamento de Dados</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="mb-4">
+                                            <h6>Progresso</h6>
+                                            <div class="progress mb-3">
+                                                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                            </div>
+                                        </div>
+                                        <div class="mb-4">
+                                            <h6>Log de Processamento</h6>
+                                            <div id="processing-log"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-3">
+                                            <button id="prev-step3" class="btn btn-secondary">Anterior</button>
+                                            <button id="start-processing" class="btn btn-primary">Iniciar Processamento</button>
+                                            <button id="next-step3" class="btn btn-success" style="display: none;">Próximo</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Conclusão -->
+                            <div id="step4-content" style="display: none;">
+                                <div class="card text-center">
+                                    <div class="card-body">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/190/190411.png" width="80" height="80" alt="Success" class="mb-3">
+                                        <h4 class="mb-3">Processamento Concluído com Sucesso!</h4>
+                                        <p>Os dados foram importados e processados. Agora você pode visualizar as informações no dashboard e na lista de clientes.</p>
+                                        <button class="btn btn-primary" onclick="showPage('dashboard')">Ir para o Dashboard</button>
+                                        <button id="prev-step4" class="btn btn-secondary">Voltar</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -584,69 +656,178 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
-        // Navigation
+        // Funções de navegação e estado da aplicação
         function showPage(pageId) {
-            // Hide all pages
             document.querySelectorAll('.page').forEach(page => {
                 page.style.display = 'none';
             });
-            
-            // Show selected page
             document.getElementById(pageId).style.display = 'block';
-            
-            // Update active link
-            document.querySelectorAll('.nav-link').forEach(link => {
+
+            document.querySelectorAll('.sidebar a').forEach(link => {
                 link.classList.remove('active');
             });
-            document.querySelector(`a[href="#${pageId}"]`).classList.add('active');
+            document.querySelector(`.sidebar a[href="#${pageId}"]`).classList.add('active');
         }
 
-        // Initialize charts when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inactivity Chart
-            const inactivityCtx = document.getElementById('inactivityChart').getContext('2d');
-            const inactivityChart = new Chart(inactivityCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '+365 dias'],
-                    datasets: [{
-                        data: [87, 65, 23, 18, 15, 15],
-                        backgroundColor: [
-                            '#28a745',
-                            '#20c997',
-                            '#ffc107',
-                            '#fd7e14',
-                            '#dc3545',
-                            '#6c757d'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
+        document.addEventListener('DOMContentLoaded', () => {
+            showPage('dashboard');
+            const storedData = localStorage.getItem("crm_data");
+            if (storedData) {
+                const clientes = JSON.parse(storedData);
+                atualizarDashboard(clientes);
+                atualizarTabelaClientes(clientes);
+            }
+        });
+
+        // Lógica de importação e processamento de dados
+        const vendasFileInput = document.getElementById("file-vendas");
+        const clientesFileInput = document.getElementById("file-clientes");
+        const processButton = document.getElementById("start-processing");
+        const processingLog = document.getElementById("processing-log");
+
+        function log(message, type = 'info') {
+            const logEntry = document.createElement('p');
+            logEntry.className = `log-${type}`;
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            processingLog.appendChild(logEntry);
+            processingLog.scrollTop = processingLog.scrollHeight;
+        }
+
+        processButton.addEventListener('click', async () => {
+            if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
+                log('Por favor, selecione os dois arquivos.', 'error');
+                return;
+            }
+
+            log('Iniciando o processamento dos arquivos...');
+
+            try {
+                const vendasData = await readFile(vendasFileInput.files[0]);
+                const pessoasData = await readFile(clientesFileInput.files[0]);
+
+                log('Arquivos lidos com sucesso. Processando dados...', 'success');
+
+                const clientes = processarDados(vendasData, pessoasData);
+
+                log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
+
+                // Salvar no localStorage
+                localStorage.setItem('crm_data', JSON.stringify(clientes));
+
+                log('Dados salvos no armazenamento local.', 'success');
+
+                // Atualizar o dashboard
+                atualizarDashboard(clientes);
+                atualizarTabelaClientes(clientes);
+
+                log('Dashboard e tabelas atualizadas.', 'success');
+                document.getElementById("next-step3").style.display = "block";
+
+            } catch (error) {
+                log(`Ocorreu um erro: ${error.message}`, 'error');
+                console.error(error);
+            }
+        });
+
+        function readFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    resolve(json);
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function processarDados(vendas, pessoas) {
+            const vendasPorCliente = {};
+
+            vendas.forEach(venda => {
+                const clienteNome = venda[document.getElementById("map-vendas-cliente").value];
+                if (!clienteNome) return;
+
+                if (!vendasPorCliente[clienteNome]) {
+                    vendasPorCliente[clienteNome] = [];
                 }
+                vendasPorCliente[clienteNome].push(venda);
             });
 
-            // Distribution Chart
-            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-            const distributionChart = new Chart(distributionCtx, {
+            const clientes = pessoas.map(pessoa => {
+                const nome = pessoa[document.getElementById("map-clientes-nome").value];
+                const vendasCliente = vendasPorCliente[nome] || [];
+                const ultimaVenda = vendasCliente.sort((a, b) => new Date(b[document.getElementById("map-vendas-data").value]) - new Date(a[document.getElementById("map-vendas-data").value]))[0];
+
+                const ultimaCompra = ultimaVenda ? new Date(ultimaVenda[document.getElementById("map-vendas-data").value]) : null;
+                const diasInativo = ultimaCompra ? Math.floor((new Date() - ultimaCompra) / (1000 * 60 * 60 * 24)) : null;
+
+                return {
+                    nome: nome,
+                    cpf: pessoa[document.getElementById("map-clientes-cpf").value],
+                    telefone: pessoa[document.getElementById("map-clientes-telefone1").value] || pessoa[document.getElementById("map-clientes-telefone2").value] || pessoa[document.getElementById("map-clientes-telefone3").value],
+                    ultimaCompra: ultimaCompra ? ultimaCompra.toLocaleDateString('pt-BR') : 'N/A',
+                    diasInativo: diasInativo,
+                    status: getStatus(diasInativo)
+                };
+            });
+
+            return clientes;
+        }
+
+        function getStatus(dias) {
+            if (dias === null) return 'Sem compras';
+            if (dias <= 30) return 'Ativo (0-30 dias)';
+            if (dias <= 60) return 'Ativo (31-60 dias)';
+            if (dias <= 90) return 'Em risco (61-90 dias)';
+            if (dias <= 180) return 'Em risco elevado (91-180 dias)';
+            if (dias <= 365) return 'Inativo (181-365 dias)';
+            return 'Perdido (>365 dias)';
+        }
+
+        function atualizarDashboard(clientes) {
+            const totalClientes = clientes.length;
+            const clientesAtivos = clientes.filter(c => c.diasInativo !== null && c.diasInativo <= 60).length;
+            const clientesInativos = clientes.filter(c => c.diasInativo !== null && c.diasInativo > 180).length;
+            const clientesRisco = clientes.filter(c => c.diasInativo !== null && c.diasInativo > 60 && c.diasInativo <= 180).length;
+            const diasMedios = totalClientes > 0 ? Math.floor(clientes.reduce((acc, c) => acc + (c.diasInativo || 0), 0) / totalClientes) : 0;
+
+            document.getElementById('clientes-ativos').textContent = clientesAtivos;
+            document.getElementById('clientes-inativos').textContent = clientesInativos;
+            document.getElementById('clientes-risco').textContent = clientesRisco;
+            document.getElementById('dias-medios').textContent = diasMedios;
+
+            // Atualizar gráfico
+            const ctx = document.getElementById('inactivityChart').getContext('2d');
+            const chartData = {
+                labels: ['0-30', '31-60', '61-90', '91-180', '181-365', '>365'],
+                datasets: [{
+                    label: 'Nº de Clientes',
+                    data: [
+                        clientes.filter(c => c.diasInativo <= 30).length,
+                        clientes.filter(c => c.diasInativo > 30 && c.diasInativo <= 60).length,
+                        clientes.filter(c => c.diasInativo > 60 && c.diasInativo <= 90).length,
+                        clientes.filter(c => c.diasInativo > 90 && c.diasInativo <= 180).length,
+                        clientes.filter(c => c.diasInativo > 180 && c.diasInativo <= 365).length,
+                        clientes.filter(c => c.diasInativo > 365).length,
+                    ],
+                    backgroundColor: ['#28a745', '#20c997', '#ffc107', '#fd7e14', '#dc3545', '#6c757d']
+                }]
+            };
+
+            if (window.myChart) {
+                window.myChart.destroy();
+            }
+
+            window.myChart = new Chart(ctx, {
                 type: 'bar',
-                data: {
-                    labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '+365 dias'],
-                    datasets: [{
-                        label: 'Quantidade de Clientes',
-                        data: [87, 65, 23, 18, 15, 15],
-                        backgroundColor: [
-                            '#28a745',
-                            '#20c997',
-                            '#ffc107',
-                            '#fd7e14',
-                            '#dc3545',
-                            '#6c757d'
-                        ]
-                    }]
-                },
+                data: chartData,
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -658,103 +839,181 @@
                 }
             });
 
-            // Trend Chart
-            const trendCtx = document.getElementById('trendChart').getContext('2d');
-            const trendChart = new Chart(trendCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set'],
-                    datasets: [{
-                        label: 'Clientes Ativos',
-                        data: [120, 125, 130, 135, 140, 145, 150, 155, 152],
-                        borderColor: '#28a745',
-                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                        fill: true
-                    }, {
-                        label: 'Clientes Inativos',
-                        data: [30, 28, 25, 22, 20, 18, 15, 12, 15],
-                        borderColor: '#dc3545',
-                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
+            // Atualizar tabela de clientes que precisam de atenção
+            const clientesAtencao = clientes.filter(c => c.diasInativo > 60).sort((a, b) => b.diasInativo - a.diasInativo).slice(0, 5);
+            const tbodyAtencao = document.getElementById('clientes-atencao');
+            tbodyAtencao.innerHTML = '';
 
-            // File Upload Handling
-            document.getElementById('upload-vendas').addEventListener('click', function() {
-                document.getElementById('file-vendas').click();
-            });
-
-            document.getElementById('upload-clientes').addEventListener('click', function() {
-                document.getElementById('file-clientes').click();
-            });
-
-            document.getElementById('file-vendas').addEventListener('change', function(e) {
-                const fileName = e.target.files[0].name;
-                document.getElementById('vendas-file-info').innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
-            });
-
-            document.getElementById('file-clientes').addEventListener('change', function(e) {
-                const fileName = e.target.files[0].name;
-                document.getElementById('clientes-file-info').innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
-            });
-
-            // Drag and Drop
-            ['upload-vendas', 'upload-clientes'].forEach(id => {
-                const dropArea = document.getElementById(id);
-                const fileInput = document.getElementById(id === 'upload-vendas' ? 'file-vendas' : 'file-clientes');
-                const fileInfo = document.getElementById(id === 'upload-vendas' ? 'vendas-file-info' : 'clientes-file-info');
-                
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, preventDefaults, false);
+            if (clientesAtencao.length > 0) {
+                clientesAtencao.forEach(cliente => {
+                    const row = `<tr>
+                        <td>${cliente.nome}</td>
+                        <td>${cliente.ultimaCompra}</td>
+                        <td>${cliente.diasInativo}</td>
+                        <td><button class="btn btn-sm btn-primary">Ver</button></td>
+                    </tr>`;
+                    tbodyAtencao.innerHTML += row;
                 });
+            } else {
+                tbodyAtencao.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum cliente precisa de atenção no momento.</td></tr>';
+            }
+        }
 
-                function preventDefaults(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
+        function atualizarTabelaClientes(clientes) {
+            const tbody = document.getElementById('lista-clientes');
+            tbody.innerHTML = '';
 
-                ['dragenter', 'dragover'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, highlight, false);
+            if (clientes.length > 0) {
+                clientes.forEach(cliente => {
+                    const row = `<tr>
+                        <td>${cliente.nome}</td>
+                        <td>${cliente.cpf || 'N/A'}</td>
+                        <td>${cliente.telefone || 'N/A'}</td>
+                        <td>${cliente.ultimaCompra}</td>
+                        <td>${cliente.diasInativo === null ? 'N/A' : cliente.diasInativo}</td>
+                        <td><span class="badge ${getStatusBadge(cliente.status)}">${cliente.status}</span></td>
+                        <td><button class="btn btn-sm btn-primary">Detalhes</button></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
                 });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum dado disponível</td></tr>';
+            }
+        }
 
-                ['dragleave', 'drop'].forEach(eventName => {
-                    dropArea.addEventListener(eventName, unhighlight, false);
-                });
+        function getStatusBadge(status) {
+            if (status.includes('Ativo')) return 'bg-success';
+            if (status.includes('risco elevado')) return 'bg-danger';
+            if (status.includes('risco')) return 'bg-warning';
+            if (status.includes('Inativo')) return 'bg-secondary';
+            if (status.includes('Perdido')) return 'bg-dark';
+            return 'bg-primary';
+        }
 
-                function highlight() {
-                    dropArea.style.borderColor = '#007bff';
-                    dropArea.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
-                }
+        // Lógica de arrastar e soltar (drag and drop)
+        ['vendas', 'clientes'].forEach(type => {
+            const uploadArea = document.getElementById(`upload-${type}`);
+            const fileInput = document.getElementById(`file-${type}`);
+            const fileInfo = document.getElementById(`${type}-file-info`);
 
-                function unhighlight() {
-                    dropArea.style.borderColor = '#ccc';
-                    dropArea.style.backgroundColor = '';
-                }
+            uploadArea.addEventListener('click', () => fileInput.click());
 
-                dropArea.addEventListener('drop', handleDrop, false);
-
-                function handleDrop(e) {
-                    const dt = e.dataTransfer;
-                    const files = dt.files;
-                    
-                    if (files.length > 0) {
-                        fileInput.files = files;
-                        const fileName = files[0].name;
-                        fileInfo.innerHTML = `<div class="alert alert-success">Arquivo selecionado: ${fileName}</div>`;
-                    }
+            fileInput.addEventListener('change', () => {
+                if (fileInput.files.length > 0) {
+                    fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
                 }
             });
 
-            // Next Step Button
-            document.getElementById('next-step1').addEventListener('click', function() {
-                alert('Esta funcionalidade está em desenvolvimento. Em breve você poderá importar suas planilhas!');
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('active');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('active');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('active');
+                fileInput.files = e.dataTransfer.files;
+                if (fileInput.files.length > 0) {
+                    fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
+                }
             });
         });
+
+        // Lógica de navegação entre os passos de importação
+        const steps = ["step1-content", "step2-content", "step3-content", "step4-content"];
+        let currentStep = 0;
+
+        function showStep(stepIndex) {
+            steps.forEach((contentId, index) => {
+                document.getElementById(contentId).style.display = (index === stepIndex) ? "block" : "none";
+            });
+
+            const stepIndicators = document.querySelectorAll(".step");
+            stepIndicators.forEach((indicator, index) => {
+                if (index === stepIndex) {
+                    indicator.classList.add("active");
+                } else {
+                    indicator.classList.remove("active");
+                }
+            });
+
+            currentStep = stepIndex;
+        }
+
+        document.getElementById("next-step1").addEventListener("click", async () => {
+            if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
+                alert("Por favor, selecione os dois arquivos.");
+                return;
+            }
+            showStep(1);
+
+            const vendasFile = vendasFileInput.files[0];
+            const clientesFile = clientesFileInput.files[0];
+
+            try {
+                const vendasHeaders = await getHeaders(vendasFile);
+                const clientesHeaders = await getHeaders(clientesFile);
+
+                populateSelect("map-vendas-data", vendasHeaders);
+                populateSelect("map-vendas-movimentacao", vendasHeaders);
+                populateSelect("map-vendas-quantidade", vendasHeaders);
+                populateSelect("map-vendas-total", vendasHeaders);
+                populateSelect("map-vendas-cliente", vendasHeaders);
+                populateSelect("map-vendas-vendedor", vendasHeaders);
+                populateSelect("map-vendas-telefone", vendasHeaders);
+
+                populateSelect("map-clientes-id", clientesHeaders);
+                populateSelect("map-clientes-nome", clientesHeaders);
+                populateSelect("map-clientes-cpf", clientesHeaders);
+                populateSelect("map-clientes-telefone1", clientesHeaders);
+                populateSelect("map-clientes-telefone2", clientesHeaders);
+                populateSelect("map-clientes-telefone3", clientesHeaders);
+                populateSelect("map-clientes-data-cadastro", clientesHeaders);
+
+            } catch (error) {
+                console.error("Erro ao ler os cabeçalhos dos arquivos:", error);
+                alert("Ocorreu um erro ao ler os arquivos. Verifique o console para mais detalhes.");
+            }
+        });
+
+        document.getElementById("prev-step2").addEventListener("click", () => showStep(0));
+        document.getElementById("next-step2").addEventListener("click", () => showStep(2));
+        document.getElementById("prev-step3").addEventListener("click", () => showStep(1));
+        document.getElementById("next-step3").addEventListener("click", () => showStep(3));
+        document.getElementById("prev-step4").addEventListener("click", () => showStep(2));
+
+        function getHeaders(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+                    resolve(headers);
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '<option value="">Selecione a coluna</option>';
+            options.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+        }
+
+        showStep(0);
     </script>
 </body>
 </html>

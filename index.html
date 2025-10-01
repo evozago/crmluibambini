@@ -68,8 +68,9 @@
             cursor: pointer;
             transition: all 0.3s;
         }
-        .upload-area:hover {
+        .upload-area:hover, .upload-area.active {
             border-color: #007bff;
+            background-color: #f8f9fa;
         }
         .step-indicator {
             display: flex;
@@ -672,18 +673,171 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM carregado, inicializando aplicação...");
             showPage('dashboard');
+            
+            // Carregar dados do localStorage se existirem
             const storedData = localStorage.getItem("crm_data");
             if (storedData) {
+                console.log("Dados encontrados no localStorage");
                 const clientes = JSON.parse(storedData);
                 atualizarDashboard(clientes);
                 atualizarTabelaClientes(clientes);
             }
+            
+            // Inicializar os event listeners para upload de arquivos
+            inicializarUploadHandlers();
+            
+            // Inicializar os event listeners para navegação entre etapas
+            inicializarNavegacaoEtapas();
         });
 
-        // Lógica de importação e processamento de dados
-        const vendasFileInput = document.getElementById("file-vendas");
-        const clientesFileInput = document.getElementById("file-clientes");
+        // Inicializar os manipuladores de eventos para upload de arquivos
+        function inicializarUploadHandlers() {
+            console.log("Inicializando manipuladores de upload...");
+            
+            ['vendas', 'clientes'].forEach(type => {
+                const uploadArea = document.getElementById(`upload-${type}`);
+                const fileInput = document.getElementById(`file-${type}`);
+                const fileInfo = document.getElementById(`${type}-file-info`);
+                
+                if (!uploadArea || !fileInput || !fileInfo) {
+                    console.error(`Elementos de upload para ${type} não encontrados`);
+                    return;
+                }
+
+                uploadArea.addEventListener('click', () => {
+                    console.log(`Clique na área de upload de ${type}`);
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', () => {
+                    console.log(`Arquivo de ${type} selecionado`);
+                    if (fileInput.files.length > 0) {
+                        fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
+                    }
+                });
+
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('active');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('active');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('active');
+                    fileInput.files = e.dataTransfer.files;
+                    if (fileInput.files.length > 0) {
+                        fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
+                    }
+                });
+            });
+        }
+
+        // Inicializar os manipuladores de eventos para navegação entre etapas
+        function inicializarNavegacaoEtapas() {
+            console.log("Inicializando navegação entre etapas...");
+            
+            const steps = ["step1-content", "step2-content", "step3-content", "step4-content"];
+            let currentStep = 0;
+
+            function showStep(stepIndex) {
+                steps.forEach((contentId, index) => {
+                    const element = document.getElementById(contentId);
+                    if (element) {
+                        element.style.display = (index === stepIndex) ? "block" : "none";
+                    } else {
+                        console.error(`Elemento ${contentId} não encontrado`);
+                    }
+                });
+
+                const stepIndicators = document.querySelectorAll(".step");
+                stepIndicators.forEach((indicator, index) => {
+                    if (index === stepIndex) {
+                        indicator.classList.add("active");
+                    } else {
+                        indicator.classList.remove("active");
+                    }
+                });
+
+                currentStep = stepIndex;
+            }
+
+            // Botões de navegação entre etapas
+            const nextStep1Button = document.getElementById("next-step1");
+            if (nextStep1Button) {
+                nextStep1Button.addEventListener("click", async () => {
+                    const vendasFileInput = document.getElementById("file-vendas");
+                    const clientesFileInput = document.getElementById("file-clientes");
+                    
+                    if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
+                        alert("Por favor, selecione os dois arquivos.");
+                        return;
+                    }
+                    
+                    showStep(1);
+
+                    try {
+                        const vendasHeaders = await getHeaders(vendasFileInput.files[0]);
+                        const clientesHeaders = await getHeaders(clientesFileInput.files[0]);
+
+                        populateSelect("map-vendas-data", vendasHeaders);
+                        populateSelect("map-vendas-movimentacao", vendasHeaders);
+                        populateSelect("map-vendas-quantidade", vendasHeaders);
+                        populateSelect("map-vendas-total", vendasHeaders);
+                        populateSelect("map-vendas-cliente", vendasHeaders);
+                        populateSelect("map-vendas-vendedor", vendasHeaders);
+                        populateSelect("map-vendas-telefone", vendasHeaders);
+
+                        populateSelect("map-clientes-id", clientesHeaders);
+                        populateSelect("map-clientes-nome", clientesHeaders);
+                        populateSelect("map-clientes-cpf", clientesHeaders);
+                        populateSelect("map-clientes-telefone1", clientesHeaders);
+                        populateSelect("map-clientes-telefone2", clientesHeaders);
+                        populateSelect("map-clientes-telefone3", clientesHeaders);
+                        populateSelect("map-clientes-data-cadastro", clientesHeaders);
+
+                    } catch (error) {
+                        console.error("Erro ao ler os cabeçalhos dos arquivos:", error);
+                        alert("Ocorreu um erro ao ler os arquivos. Verifique o console para mais detalhes.");
+                    }
+                });
+            }
+
+            const prevStep2Button = document.getElementById("prev-step2");
+            if (prevStep2Button) {
+                prevStep2Button.addEventListener("click", () => showStep(0));
+            }
+            
+            const nextStep2Button = document.getElementById("next-step2");
+            if (nextStep2Button) {
+                nextStep2Button.addEventListener("click", () => showStep(2));
+            }
+            
+            const prevStep3Button = document.getElementById("prev-step3");
+            if (prevStep3Button) {
+                prevStep3Button.addEventListener("click", () => showStep(1));
+            }
+            
+            const nextStep3Button = document.getElementById("next-step3");
+            if (nextStep3Button) {
+                nextStep3Button.addEventListener("click", () => showStep(3));
+            }
+            
+            const prevStep4Button = document.getElementById("prev-step4");
+            if (prevStep4Button) {
+                prevStep4Button.addEventListener("click", () => showStep(2));
+            }
+
+            // Inicializar na primeira etapa
+            showStep(0);
+        }
+
+        // Lógica de processamento de dados
         const processButton = document.getElementById("start-processing");
         const processingLog = document.getElementById("processing-log");
 
@@ -695,63 +849,116 @@
             processingLog.scrollTop = processingLog.scrollHeight;
         }
 
-        processButton.addEventListener('click', async () => {
-            if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
-                log('Por favor, selecione os dois arquivos.', 'error');
-                return;
-            }
+        if (processButton) {
+            processButton.addEventListener('click', async () => {
+                const vendasFileInput = document.getElementById("file-vendas");
+                const clientesFileInput = document.getElementById("file-clientes");
+                
+                if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
+                    log('Por favor, selecione os dois arquivos.', 'error');
+                    return;
+                }
 
-            log('Iniciando o processamento dos arquivos...');
+                log('Iniciando o processamento dos arquivos...');
 
-            try {
-                const vendasData = await readFile(vendasFileInput.files[0]);
-                const pessoasData = await readFile(clientesFileInput.files[0]);
+                try {
+                    const vendasData = await readFile(vendasFileInput.files[0]);
+                    const pessoasData = await readFile(clientesFileInput.files[0]);
 
-                log('Arquivos lidos com sucesso. Processando dados...', 'success');
+                    log('Arquivos lidos com sucesso. Processando dados...', 'success');
 
-                const clientes = processarDados(vendasData, pessoasData);
+                    const clientes = processarDados(vendasData, pessoasData);
 
-                log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
+                    log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
 
-                // Salvar no localStorage
-                localStorage.setItem('crm_data', JSON.stringify(clientes));
+                    // Salvar no localStorage
+                    localStorage.setItem('crm_data', JSON.stringify(clientes));
 
-                log('Dados salvos no armazenamento local.', 'success');
+                    log('Dados salvos no armazenamento local.', 'success');
 
-                // Atualizar o dashboard
-                atualizarDashboard(clientes);
-                atualizarTabelaClientes(clientes);
+                    // Atualizar o dashboard
+                    atualizarDashboard(clientes);
+                    atualizarTabelaClientes(clientes);
 
-                log('Dashboard e tabelas atualizadas.', 'success');
-                document.getElementById("next-step3").style.display = "block";
+                    log('Dashboard e tabelas atualizadas.', 'success');
+                    document.getElementById("next-step3").style.display = "block";
 
-            } catch (error) {
-                log(`Ocorreu um erro: ${error.message}`, 'error');
-                console.error(error);
-            }
-        });
+                } catch (error) {
+                    log(`Ocorreu um erro: ${error.message}`, 'error');
+                    console.error(error);
+                }
+            });
+        }
 
         function readFile(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-                    resolve(json);
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        resolve(json);
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
                 reader.onerror = (error) => reject(error);
                 reader.readAsArrayBuffer(file);
             });
         }
 
+        function getHeaders(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+                        resolve(headers);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = (error) => reject(error);
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function populateSelect(selectId, options) {
+            const select = document.getElementById(selectId);
+            if (!select) {
+                console.error(`Elemento select ${selectId} não encontrado`);
+                return;
+            }
+            
+            select.innerHTML = '<option value="">Selecione a coluna</option>';
+            options.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                select.appendChild(optionElement);
+            });
+        }
+
         function processarDados(vendas, pessoas) {
             const vendasPorCliente = {};
 
+            const clienteField = document.getElementById("map-vendas-cliente").value;
+            const dataField = document.getElementById("map-vendas-data").value;
+            const nomeField = document.getElementById("map-clientes-nome").value;
+            const cpfField = document.getElementById("map-clientes-cpf").value;
+            const telefone1Field = document.getElementById("map-clientes-telefone1").value;
+            const telefone2Field = document.getElementById("map-clientes-telefone2").value;
+            const telefone3Field = document.getElementById("map-clientes-telefone3").value;
+
             vendas.forEach(venda => {
-                const clienteNome = venda[document.getElementById("map-vendas-cliente").value];
+                const clienteNome = venda[clienteField];
                 if (!clienteNome) return;
 
                 if (!vendasPorCliente[clienteNome]) {
@@ -761,17 +968,21 @@
             });
 
             const clientes = pessoas.map(pessoa => {
-                const nome = pessoa[document.getElementById("map-clientes-nome").value];
+                const nome = pessoa[nomeField];
                 const vendasCliente = vendasPorCliente[nome] || [];
-                const ultimaVenda = vendasCliente.sort((a, b) => new Date(b[document.getElementById("map-vendas-data").value]) - new Date(a[document.getElementById("map-vendas-data").value]))[0];
+                const ultimaVenda = vendasCliente.sort((a, b) => {
+                    const dateA = new Date(a[dataField]);
+                    const dateB = new Date(b[dataField]);
+                    return dateB - dateA;
+                })[0];
 
-                const ultimaCompra = ultimaVenda ? new Date(ultimaVenda[document.getElementById("map-vendas-data").value]) : null;
+                const ultimaCompra = ultimaVenda ? new Date(ultimaVenda[dataField]) : null;
                 const diasInativo = ultimaCompra ? Math.floor((new Date() - ultimaCompra) / (1000 * 60 * 60 * 24)) : null;
 
                 return {
                     nome: nome,
-                    cpf: pessoa[document.getElementById("map-clientes-cpf").value],
-                    telefone: pessoa[document.getElementById("map-clientes-telefone1").value] || pessoa[document.getElementById("map-clientes-telefone2").value] || pessoa[document.getElementById("map-clientes-telefone3").value],
+                    cpf: pessoa[cpfField],
+                    telefone: pessoa[telefone1Field] || pessoa[telefone2Field] || pessoa[telefone3Field],
                     ultimaCompra: ultimaCompra ? ultimaCompra.toLocaleDateString('pt-BR') : 'N/A',
                     diasInativo: diasInativo,
                     status: getStatus(diasInativo)
@@ -804,18 +1015,23 @@
             document.getElementById('dias-medios').textContent = diasMedios;
 
             // Atualizar gráfico
-            const ctx = document.getElementById('inactivityChart').getContext('2d');
+            const ctx = document.getElementById('inactivityChart');
+            if (!ctx) {
+                console.error('Elemento canvas inactivityChart não encontrado');
+                return;
+            }
+            
             const chartData = {
                 labels: ['0-30', '31-60', '61-90', '91-180', '181-365', '>365'],
                 datasets: [{
                     label: 'Nº de Clientes',
                     data: [
-                        clientes.filter(c => c.diasInativo <= 30).length,
-                        clientes.filter(c => c.diasInativo > 30 && c.diasInativo <= 60).length,
-                        clientes.filter(c => c.diasInativo > 60 && c.diasInativo <= 90).length,
-                        clientes.filter(c => c.diasInativo > 90 && c.diasInativo <= 180).length,
-                        clientes.filter(c => c.diasInativo > 180 && c.diasInativo <= 365).length,
-                        clientes.filter(c => c.diasInativo > 365).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo <= 30).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo > 30 && c.diasInativo <= 60).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo > 60 && c.diasInativo <= 90).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo > 90 && c.diasInativo <= 180).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo > 180 && c.diasInativo <= 365).length,
+                        clientes.filter(c => c.diasInativo !== null && c.diasInativo > 365).length,
                     ],
                     backgroundColor: ['#28a745', '#20c997', '#ffc107', '#fd7e14', '#dc3545', '#6c757d']
                 }]
@@ -825,7 +1041,7 @@
                 window.myChart.destroy();
             }
 
-            window.myChart = new Chart(ctx, {
+            window.myChart = new Chart(ctx.getContext('2d'), {
                 type: 'bar',
                 data: chartData,
                 options: {
@@ -840,8 +1056,13 @@
             });
 
             // Atualizar tabela de clientes que precisam de atenção
-            const clientesAtencao = clientes.filter(c => c.diasInativo > 60).sort((a, b) => b.diasInativo - a.diasInativo).slice(0, 5);
+            const clientesAtencao = clientes.filter(c => c.diasInativo !== null && c.diasInativo > 60).sort((a, b) => b.diasInativo - a.diasInativo).slice(0, 5);
             const tbodyAtencao = document.getElementById('clientes-atencao');
+            if (!tbodyAtencao) {
+                console.error('Elemento tbody clientes-atencao não encontrado');
+                return;
+            }
+            
             tbodyAtencao.innerHTML = '';
 
             if (clientesAtencao.length > 0) {
@@ -861,6 +1082,11 @@
 
         function atualizarTabelaClientes(clientes) {
             const tbody = document.getElementById('lista-clientes');
+            if (!tbody) {
+                console.error('Elemento tbody lista-clientes não encontrado');
+                return;
+            }
+            
             tbody.innerHTML = '';
 
             if (clientes.length > 0) {
@@ -889,131 +1115,6 @@
             if (status.includes('Perdido')) return 'bg-dark';
             return 'bg-primary';
         }
-
-        // Lógica de arrastar e soltar (drag and drop)
-        ['vendas', 'clientes'].forEach(type => {
-            const uploadArea = document.getElementById(`upload-${type}`);
-            const fileInput = document.getElementById(`file-${type}`);
-            const fileInfo = document.getElementById(`${type}-file-info`);
-
-            uploadArea.addEventListener('click', () => fileInput.click());
-
-            fileInput.addEventListener('change', () => {
-                if (fileInput.files.length > 0) {
-                    fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
-                }
-            });
-
-            uploadArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                uploadArea.classList.add('active');
-            });
-
-            uploadArea.addEventListener('dragleave', () => {
-                uploadArea.classList.remove('active');
-            });
-
-            uploadArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                uploadArea.classList.remove('active');
-                fileInput.files = e.dataTransfer.files;
-                if (fileInput.files.length > 0) {
-                    fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
-                }
-            });
-        });
-
-        // Lógica de navegação entre os passos de importação
-        const steps = ["step1-content", "step2-content", "step3-content", "step4-content"];
-        let currentStep = 0;
-
-        function showStep(stepIndex) {
-            steps.forEach((contentId, index) => {
-                document.getElementById(contentId).style.display = (index === stepIndex) ? "block" : "none";
-            });
-
-            const stepIndicators = document.querySelectorAll(".step");
-            stepIndicators.forEach((indicator, index) => {
-                if (index === stepIndex) {
-                    indicator.classList.add("active");
-                } else {
-                    indicator.classList.remove("active");
-                }
-            });
-
-            currentStep = stepIndex;
-        }
-
-        document.getElementById("next-step1").addEventListener("click", async () => {
-            if (!vendasFileInput.files.length || !clientesFileInput.files.length) {
-                alert("Por favor, selecione os dois arquivos.");
-                return;
-            }
-            showStep(1);
-
-            const vendasFile = vendasFileInput.files[0];
-            const clientesFile = clientesFileInput.files[0];
-
-            try {
-                const vendasHeaders = await getHeaders(vendasFile);
-                const clientesHeaders = await getHeaders(clientesFile);
-
-                populateSelect("map-vendas-data", vendasHeaders);
-                populateSelect("map-vendas-movimentacao", vendasHeaders);
-                populateSelect("map-vendas-quantidade", vendasHeaders);
-                populateSelect("map-vendas-total", vendasHeaders);
-                populateSelect("map-vendas-cliente", vendasHeaders);
-                populateSelect("map-vendas-vendedor", vendasHeaders);
-                populateSelect("map-vendas-telefone", vendasHeaders);
-
-                populateSelect("map-clientes-id", clientesHeaders);
-                populateSelect("map-clientes-nome", clientesHeaders);
-                populateSelect("map-clientes-cpf", clientesHeaders);
-                populateSelect("map-clientes-telefone1", clientesHeaders);
-                populateSelect("map-clientes-telefone2", clientesHeaders);
-                populateSelect("map-clientes-telefone3", clientesHeaders);
-                populateSelect("map-clientes-data-cadastro", clientesHeaders);
-
-            } catch (error) {
-                console.error("Erro ao ler os cabeçalhos dos arquivos:", error);
-                alert("Ocorreu um erro ao ler os arquivos. Verifique o console para mais detalhes.");
-            }
-        });
-
-        document.getElementById("prev-step2").addEventListener("click", () => showStep(0));
-        document.getElementById("next-step2").addEventListener("click", () => showStep(2));
-        document.getElementById("prev-step3").addEventListener("click", () => showStep(1));
-        document.getElementById("next-step3").addEventListener("click", () => showStep(3));
-        document.getElementById("prev-step4").addEventListener("click", () => showStep(2));
-
-        function getHeaders(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
-                    resolve(headers);
-                };
-                reader.onerror = (error) => reject(error);
-                reader.readAsArrayBuffer(file);
-            });
-        }
-
-        function populateSelect(selectId, options) {
-            const select = document.getElementById(selectId);
-            select.innerHTML = '<option value="">Selecione a coluna</option>';
-            options.forEach(option => {
-                const optionElement = document.createElement("option");
-                optionElement.value = option;
-                optionElement.textContent = option;
-                select.appendChild(optionElement);
-            });
-        }
-
-        showStep(0);
     </script>
 </body>
 </html>

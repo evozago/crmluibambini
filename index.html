@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="xlsx.full.min.js"></script>
+    <script src="supabase.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -183,25 +184,25 @@
                         <div class="col-md-3">
                             <div class="stat-card" style="border-left-color: #28a745;">
                                 <p>Clientes Ativos</p>
-                                <h3>1,245</h3>
+                                <h3 id="dashboard-ativos">Carregando...</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card" style="border-left-color: #ffc107;">
                                 <p>Em Risco</p>
-                                <h3>328</h3>
+                                <h3 id="dashboard-risco">Carregando...</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card" style="border-left-color: #dc3545;">
                                 <p>Inativos</p>
-                                <h3>157</h3>
+                                <h3 id="dashboard-inativos">Carregando...</h3>
                             </div>
                         </div>
                         <div class="col-md-3">
                             <div class="stat-card" style="border-left-color: #17a2b8;">
                                 <p>Tempo Médio</p>
-                                <h3>45 dias</h3>
+                                <h3 id="dashboard-tempo-medio">Carregando...</h3>
                             </div>
                         </div>
                     </div>
@@ -223,26 +224,12 @@
                                     Clientes que Precisam de Atenção
                                 </div>
                                 <div class="card-body">
-                                    <ul class="list-group">
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Maria Silva
-                                            <span class="badge bg-danger rounded-pill">120 dias</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            João Santos
-                                            <span class="badge bg-danger rounded-pill">115 dias</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Ana Oliveira
-                                            <span class="badge bg-warning rounded-pill">85 dias</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Carlos Pereira
-                                            <span class="badge bg-warning rounded-pill">78 dias</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            Fernanda Costa
-                                            <span class="badge bg-warning rounded-pill">65 dias</span>
+                                    <ul class="list-group" id="clientes-atencao">
+                                        <li class="list-group-item text-center">
+                                            <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                <span class="visually-hidden">Carregando...</span>
+                                            </div>
+                                            Carregando dados...
                                         </li>
                                     </ul>
                                 </div>
@@ -268,41 +255,14 @@
                                                     <th>Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="ultimas-compras">
                                                 <tr>
-                                                    <td>Roberto Almeida</td>
-                                                    <td>15/09/2025</td>
-                                                    <td>R$ 350,00</td>
-                                                    <td>15</td>
-                                                    <td><span class="badge bg-success">Ativo</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Patrícia Lima</td>
-                                                    <td>10/09/2025</td>
-                                                    <td>R$ 420,00</td>
-                                                    <td>20</td>
-                                                    <td><span class="badge bg-success">Ativo</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Marcos Souza</td>
-                                                    <td>28/08/2025</td>
-                                                    <td>R$ 180,00</td>
-                                                    <td>33</td>
-                                                    <td><span class="badge bg-success">Ativo</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Juliana Ferreira</td>
-                                                    <td>15/08/2025</td>
-                                                    <td>R$ 550,00</td>
-                                                    <td>46</td>
-                                                    <td><span class="badge bg-warning">Em Risco</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Ricardo Santos</td>
-                                                    <td>02/08/2025</td>
-                                                    <td>R$ 290,00</td>
-                                                    <td>59</td>
-                                                    <td><span class="badge bg-warning">Em Risco</span></td>
+                                                    <td colspan="5" class="text-center">
+                                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                        Carregando dados...
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -320,21 +280,21 @@
                         <div class="card-header">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <input type="text" class="form-control" placeholder="Buscar cliente...">
+                                    <input type="text" class="form-control" id="busca-cliente" placeholder="Buscar cliente...">
                                 </div>
                                 <div class="col-md-3">
-                                    <select class="form-select">
-                                        <option selected>Todos os Status</option>
-                                        <option>Ativos (0-30 dias)</option>
-                                        <option>Ativos (31-60 dias)</option>
-                                        <option>Em Risco (61-90 dias)</option>
-                                        <option>Em Risco Alto (91-180 dias)</option>
-                                        <option>Inativos (181-365 dias)</option>
-                                        <option>Perdidos (>365 dias)</option>
+                                    <select class="form-select" id="filtro-status">
+                                        <option selected value="">Todos os Status</option>
+                                        <option value="0-30">Ativos (0-30 dias)</option>
+                                        <option value="31-60">Ativos (31-60 dias)</option>
+                                        <option value="61-90">Em Risco (61-90 dias)</option>
+                                        <option value="91-180">Em Risco Alto (91-180 dias)</option>
+                                        <option value="181-365">Inativos (181-365 dias)</option>
+                                        <option value="365+">Perdidos (>365 dias)</option>
                                     </select>
                                 </div>
                                 <div class="col-md-3">
-                                    <button class="btn btn-primary w-100">Filtrar</button>
+                                    <button class="btn btn-primary w-100" id="btn-filtrar-clientes">Filtrar</button>
                                 </div>
                             </div>
                         </div>
@@ -352,138 +312,24 @@
                                             <th>Ações</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody id="lista-clientes">
                                         <tr>
-                                            <td>Maria Silva</td>
-                                            <td>123.456.789-00</td>
-                                            <td>(11) 98765-4321</td>
-                                            <td>02/06/2025</td>
-                                            <td>120</td>
-                                            <td><span class="badge bg-danger">Inativo</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>João Santos</td>
-                                            <td>987.654.321-00</td>
-                                            <td>(11) 91234-5678</td>
-                                            <td>07/06/2025</td>
-                                            <td>115</td>
-                                            <td><span class="badge bg-danger">Inativo</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Ana Oliveira</td>
-                                            <td>456.789.123-00</td>
-                                            <td>(11) 97654-3210</td>
-                                            <td>07/07/2025</td>
-                                            <td>85</td>
-                                            <td><span class="badge bg-warning">Em Risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Carlos Pereira</td>
-                                            <td>789.123.456-00</td>
-                                            <td>(11) 93456-7890</td>
-                                            <td>14/07/2025</td>
-                                            <td>78</td>
-                                            <td><span class="badge bg-warning">Em Risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Fernanda Costa</td>
-                                            <td>321.654.987-00</td>
-                                            <td>(11) 95678-1234</td>
-                                            <td>27/07/2025</td>
-                                            <td>65</td>
-                                            <td><span class="badge bg-warning">Em Risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Roberto Almeida</td>
-                                            <td>654.987.321-00</td>
-                                            <td>(11) 92345-6789</td>
-                                            <td>15/09/2025</td>
-                                            <td>15</td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Patrícia Lima</td>
-                                            <td>234.567.891-00</td>
-                                            <td>(11) 94567-8901</td>
-                                            <td>10/09/2025</td>
-                                            <td>20</td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Marcos Souza</td>
-                                            <td>567.891.234-00</td>
-                                            <td>(11) 96789-0123</td>
-                                            <td>28/08/2025</td>
-                                            <td>33</td>
-                                            <td><span class="badge bg-success">Ativo</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Juliana Ferreira</td>
-                                            <td>891.234.567-00</td>
-                                            <td>(11) 98901-2345</td>
-                                            <td>15/08/2025</td>
-                                            <td>46</td>
-                                            <td><span class="badge bg-warning">Em Risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Ricardo Santos</td>
-                                            <td>345.678.912-00</td>
-                                            <td>(11) 90123-4567</td>
-                                            <td>02/08/2025</td>
-                                            <td>59</td>
-                                            <td><span class="badge bg-warning">Em Risco</span></td>
-                                            <td>
-                                                <button class="btn btn-sm btn-outline-primary">Detalhes</button>
-                                                <button class="btn btn-sm btn-outline-success">Mensagem</button>
+                                            <td colspan="7" class="text-center">
+                                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                    <span class="visually-hidden">Carregando...</span>
+                                                </div>
+                                                Carregando dados...
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                             <nav>
-                                <ul class="pagination justify-content-center">
+                                <ul class="pagination justify-content-center" id="paginacao-clientes">
                                     <li class="page-item disabled">
                                         <a class="page-link" href="#" tabindex="-1">Anterior</a>
                                     </li>
                                     <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                                    <li class="page-item"><a class="page-link" href="#">3</a></li>
                                     <li class="page-item">
                                         <a class="page-link" href="#">Próximo</a>
                                     </li>
@@ -503,30 +349,30 @@
                                     Categorias de Clientes
                                 </div>
                                 <div class="card-body">
-                                    <div class="list-group">
+                                    <div class="list-group" id="categorias-clientes">
                                         <a href="#" class="list-group-item list-group-item-action active" data-category="ativos-recentes">
                                             Ativos Recentes (0-30 dias)
-                                            <span class="badge bg-primary float-end">245</span>
+                                            <span class="badge bg-primary float-end" id="count-ativos-recentes">...</span>
                                         </a>
                                         <a href="#" class="list-group-item list-group-item-action" data-category="ativos">
                                             Ativos (31-60 dias)
-                                            <span class="badge bg-primary float-end">183</span>
+                                            <span class="badge bg-primary float-end" id="count-ativos">...</span>
                                         </a>
                                         <a href="#" class="list-group-item list-group-item-action" data-category="risco">
                                             Em Risco (61-90 dias)
-                                            <span class="badge bg-primary float-end">128</span>
+                                            <span class="badge bg-primary float-end" id="count-risco">...</span>
                                         </a>
                                         <a href="#" class="list-group-item list-group-item-action" data-category="risco-alto">
                                             Em Risco Alto (91-180 dias)
-                                            <span class="badge bg-primary float-end">97</span>
+                                            <span class="badge bg-primary float-end" id="count-risco-alto">...</span>
                                         </a>
                                         <a href="#" class="list-group-item list-group-item-action" data-category="inativos">
                                             Inativos (181-365 dias)
-                                            <span class="badge bg-primary float-end">76</span>
+                                            <span class="badge bg-primary float-end" id="count-inativos">...</span>
                                         </a>
                                         <a href="#" class="list-group-item list-group-item-action" data-category="perdidos">
                                             Perdidos (>365 dias)
-                                            <span class="badge bg-primary float-end">81</span>
+                                            <span class="badge bg-primary float-end" id="count-perdidos">...</span>
                                         </a>
                                     </div>
                                 </div>
@@ -534,7 +380,7 @@
                         </div>
                         <div class="col-md-8">
                             <div class="card">
-                                <div class="card-header">
+                                <div class="card-header" id="mensagem-categoria-titulo">
                                     Modelo de Mensagem - Ativos Recentes (0-30 dias)
                                 </div>
                                 <div class="card-body">
@@ -561,25 +407,20 @@ Equipe Lui Bambini</textarea>
                                     <div class="mb-3">
                                         <label for="previewClient" class="form-label">Visualizar para Cliente</label>
                                         <select class="form-select" id="previewClient">
-                                            <option>Roberto Almeida</option>
-                                            <option>Patrícia Lima</option>
-                                            <option>Marcos Souza</option>
+                                            <option value="">Carregando clientes...</option>
                                         </select>
                                     </div>
                                     <div class="card mb-3">
                                         <div class="card-header">
                                             Prévia da Mensagem
                                         </div>
-                                        <div class="card-body">
-                                            <p>Olá Roberto Almeida,</p>
-                                            <p>Obrigado por sua compra recente em nossa loja! Esperamos que esteja satisfeito com seus produtos.</p>
-                                            <p>Queremos informar que temos novidades que podem ser do seu interesse. Que tal passar em nossa loja para conferir?</p>
-                                            <p>Atenciosamente,<br>Equipe Lui Bambini</p>
+                                        <div class="card-body" id="mensagem-preview">
+                                            <p>Carregando prévia...</p>
                                         </div>
                                     </div>
                                     <div class="d-flex justify-content-between">
-                                        <button class="btn btn-primary">Salvar Template</button>
-                                        <button class="btn btn-success">Copiar Mensagem</button>
+                                        <button class="btn btn-primary" id="btn-salvar-template">Salvar Template</button>
+                                        <button class="btn btn-success" id="btn-copiar-mensagem">Copiar Mensagem</button>
                                     </div>
                                 </div>
                             </div>
@@ -630,48 +471,14 @@ Equipe Lui Bambini</textarea>
                                                     <th>Ação Recomendada</th>
                                                 </tr>
                                             </thead>
-                                            <tbody>
+                                            <tbody id="resumo-categorias">
                                                 <tr>
-                                                    <td>Ativos Recentes (0-30 dias)</td>
-                                                    <td>245</td>
-                                                    <td>30.2%</td>
-                                                    <td>R$ 320,00</td>
-                                                    <td>Oferecer produtos complementares</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Ativos (31-60 dias)</td>
-                                                    <td>183</td>
-                                                    <td>22.6%</td>
-                                                    <td>R$ 285,00</td>
-                                                    <td>Enviar novidades e promoções</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Em Risco (61-90 dias)</td>
-                                                    <td>128</td>
-                                                    <td>15.8%</td>
-                                                    <td>R$ 250,00</td>
-                                                    <td>Oferecer desconto para retorno</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Em Risco Alto (91-180 dias)</td>
-                                                    <td>97</td>
-                                                    <td>12.0%</td>
-                                                    <td>R$ 230,00</td>
-                                                    <td>Contato telefônico e desconto especial</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Inativos (181-365 dias)</td>
-                                                    <td>76</td>
-                                                    <td>9.4%</td>
-                                                    <td>R$ 210,00</td>
-                                                    <td>Campanha de reativação</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Perdidos (>365 dias)</td>
-                                                    <td>81</td>
-                                                    <td>10.0%</td>
-                                                    <td>R$ 190,00</td>
-                                                    <td>Pesquisa de satisfação e oferta exclusiva</td>
+                                                    <td colspan="5" class="text-center">
+                                                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                                            <span class="visually-hidden">Carregando...</span>
+                                                        </div>
+                                                        Carregando dados...
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1015,12 +822,58 @@ Equipe Lui Bambini</textarea>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Navigation
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize charts
-            initCharts();
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://ldjfxeyyyxnhffobijmf.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxkamZ4ZXl5eXhuaGZmb2Jpam1mIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMzM0MDAsImV4cCI6MjA3NDgwOTQwMH0.fwBzK0FBMfNCGh6Xyajkj7D5sV9Lw4a9JIWsIqPRenk';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Global variables
+        let distributionChart = null;
+        let clientDistributionChart = null;
+        let inactivityTrendChart = null;
+        let vendasFile = null;
+        let clientesFile = null;
+        let vendasData = null;
+        let clientesData = null;
+        let clientesProcessados = [];
+        let vendasProcessadas = [];
+        let ultimasCompras = [];
+        let currentPage = 1;
+        let itemsPerPage = 10;
+        let filteredClientes = [];
+        let templates = {
+            'ativos-recentes': 'Olá {nome},\n\nObrigado por sua compra recente em nossa loja! Esperamos que esteja satisfeito com seus produtos.\n\nQueremos informar que temos novidades que podem ser do seu interesse. Que tal passar em nossa loja para conferir?\n\nAtenciosamente,\nEquipe Lui Bambini',
+            'ativos': 'Olá {nome},\n\nEsperamos que esteja tudo bem! Já faz {dias_inativo} dias desde sua última visita à nossa loja.\n\nGostaríamos de informar que recebemos novos produtos que podem ser do seu interesse. Venha conferir!\n\nAtenciosamente,\nEquipe Lui Bambini',
+            'risco': 'Olá {nome},\n\nSentimos sua falta! Já faz {dias_inativo} dias desde sua última compra conosco.\n\nPensando em você, preparamos uma seleção especial de produtos. Que tal nos visitar esta semana?\n\nAtenciosamente,\nEquipe Lui Bambini',
+            'risco-alto': 'Olá {nome},\n\nEstamos com saudades! Faz {dias_inativo} dias desde sua última visita à nossa loja.\n\nPensando em você, preparamos um desconto especial de 10% em qualquer produto. Basta apresentar esta mensagem!\n\nAtenciosamente,\nEquipe Lui Bambini',
+            'inativos': 'Olá {nome},\n\nSentimos muito sua falta! Já faz {dias_inativo} dias desde sua última compra conosco.\n\nGostaríamos de reconquistar você como cliente. Por isso, preparamos um desconto especial de 15% em qualquer produto de nossa loja.\n\nEsperamos vê-lo em breve!\n\nAtenciosamente,\nEquipe Lui Bambini',
+            'perdidos': 'Olá {nome},\n\nFaz mais de um ano desde sua última visita à nossa loja, e gostaríamos muito de tê-lo de volta!\n\nPensando nisso, preparamos uma oferta exclusiva: 20% de desconto em qualquer produto + frete grátis na sua próxima compra.\n\nSua opinião é muito importante para nós. O que podemos fazer para melhorar nossos serviços?\n\nAtenciosamente,\nEquipe Lui Bambini'
+        };
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
             // Navigation
+            setupNavigation();
+            
+            // File Upload Handling
+            setupFileUpload('vendas');
+            setupFileUpload('clientes');
+
+            // Step Navigation
+            setupStepNavigation();
+
+            // Load data from Supabase
+            loadDataFromSupabase();
+
+            // Setup message templates
+            setupMessageTemplates();
+
+            // Setup client filtering
+            setupClientFiltering();
+        });
+
+        // Navigation setup
+        function setupNavigation() {
             const navLinks = document.querySelectorAll('.nav-link');
             const pageContents = document.querySelectorAll('.page-content');
 
@@ -1040,12 +893,10 @@ Equipe Lui Bambini</textarea>
                     document.getElementById(`${targetPage}-content`).style.display = 'block';
                 });
             });
+        }
 
-            // File Upload Handling
-            setupFileUpload('vendas');
-            setupFileUpload('clientes');
-
-            // Step Navigation
+        // Step Navigation setup
+        function setupStepNavigation() {
             document.getElementById('btn-next-step1').addEventListener('click', function() {
                 goToStep(2);
             });
@@ -1077,133 +928,217 @@ Equipe Lui Bambini</textarea>
                 goToStep(1);
                 // Navigate to dashboard
                 document.querySelector('.nav-link[data-page="dashboard"]').click();
+                // Reload data from Supabase
+                loadDataFromSupabase();
             });
-        });
+        }
 
-        // Initialize Charts
-        function initCharts() {
-            // Dashboard Distribution Chart
-            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
-            const distributionChart = new Chart(distributionCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '>365 dias'],
-                    datasets: [{
-                        label: 'Número de Clientes',
-                        data: [245, 183, 128, 97, 76, 81],
-                        backgroundColor: [
-                            'rgba(40, 167, 69, 0.7)',
-                            'rgba(40, 167, 69, 0.5)',
-                            'rgba(255, 193, 7, 0.7)',
-                            'rgba(255, 193, 7, 0.5)',
-                            'rgba(220, 53, 69, 0.7)',
-                            'rgba(220, 53, 69, 0.5)'
-                        ],
-                        borderColor: [
-                            'rgba(40, 167, 69, 1)',
-                            'rgba(40, 167, 69, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(220, 53, 69, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
+        // Message templates setup
+        function setupMessageTemplates() {
+            const categoryLinks = document.querySelectorAll('#categorias-clientes a');
+            const templateTextarea = document.getElementById('messageTemplate');
+            const categoryTitle = document.getElementById('mensagem-categoria-titulo');
+            const previewClient = document.getElementById('previewClient');
+            const previewArea = document.getElementById('mensagem-preview');
+            const btnCopyMessage = document.getElementById('btn-copiar-mensagem');
+            const btnSaveTemplate = document.getElementById('btn-salvar-template');
+
+            // Category selection
+            categoryLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active link
+                    categoryLinks.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Get category
+                    const category = this.getAttribute('data-category');
+                    
+                    // Update title
+                    let categoryText = this.textContent.trim().split('\n')[0];
+                    categoryTitle.textContent = `Modelo de Mensagem - ${categoryText}`;
+                    
+                    // Update template
+                    templateTextarea.value = templates[category];
+                    
+                    // Update preview clients dropdown
+                    updatePreviewClientsDropdown(category);
+                    
+                    // Update preview
+                    updateMessagePreview();
+                });
             });
 
-            // Statistics Client Distribution Chart
-            const clientDistributionCtx = document.getElementById('clientDistributionChart').getContext('2d');
-            const clientDistributionChart = new Chart(clientDistributionCtx, {
-                type: 'pie',
-                data: {
-                    labels: ['Ativos Recentes', 'Ativos', 'Em Risco', 'Em Risco Alto', 'Inativos', 'Perdidos'],
-                    datasets: [{
-                        data: [30.2, 22.6, 15.8, 12.0, 9.4, 10.0],
-                        backgroundColor: [
-                            'rgba(40, 167, 69, 0.7)',
-                            'rgba(40, 167, 69, 0.5)',
-                            'rgba(255, 193, 7, 0.7)',
-                            'rgba(255, 193, 7, 0.5)',
-                            'rgba(220, 53, 69, 0.7)',
-                            'rgba(220, 53, 69, 0.5)'
-                        ],
-                        borderColor: [
-                            'rgba(40, 167, 69, 1)',
-                            'rgba(40, 167, 69, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(255, 193, 7, 1)',
-                            'rgba(220, 53, 69, 1)',
-                            'rgba(220, 53, 69, 1)'
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    plugins: {
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: ${context.raw}%`;
-                                }
-                            }
-                        }
-                    }
-                }
+            // Preview client selection
+            previewClient.addEventListener('change', updateMessagePreview);
+
+            // Copy message
+            btnCopyMessage.addEventListener('click', function() {
+                const previewText = previewArea.innerText;
+                navigator.clipboard.writeText(previewText)
+                    .then(() => {
+                        // Show success message
+                        const originalText = btnCopyMessage.textContent;
+                        btnCopyMessage.textContent = 'Copiado!';
+                        btnCopyMessage.classList.remove('btn-success');
+                        btnCopyMessage.classList.add('btn-outline-success');
+                        
+                        setTimeout(() => {
+                            btnCopyMessage.textContent = originalText;
+                            btnCopyMessage.classList.remove('btn-outline-success');
+                            btnCopyMessage.classList.add('btn-success');
+                        }, 2000);
+                    })
+                    .catch(err => {
+                        console.error('Erro ao copiar mensagem:', err);
+                        alert('Erro ao copiar mensagem. Por favor, tente novamente.');
+                    });
             });
 
-            // Statistics Inactivity Trend Chart
-            const inactivityTrendCtx = document.getElementById('inactivityTrendChart').getContext('2d');
-            const inactivityTrendChart = new Chart(inactivityTrendCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro'],
-                    datasets: [
-                        {
-                            label: 'Ativos',
-                            data: [410, 425, 440, 430, 445, 428],
-                            borderColor: 'rgba(40, 167, 69, 1)',
-                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Em Risco',
-                            data: [210, 205, 215, 225, 230, 225],
-                            borderColor: 'rgba(255, 193, 7, 1)',
-                            backgroundColor: 'rgba(255, 193, 7, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Inativos',
-                            data: [150, 155, 160, 155, 150, 157],
-                            borderColor: 'rgba(220, 53, 69, 1)',
-                            backgroundColor: 'rgba(220, 53, 69, 0.1)',
-                            fill: true,
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true
+            // Save template
+            btnSaveTemplate.addEventListener('click', function() {
+                const activeCategory = document.querySelector('#categorias-clientes a.active').getAttribute('data-category');
+                templates[activeCategory] = templateTextarea.value;
+                
+                // Show success message
+                const originalText = btnSaveTemplate.textContent;
+                btnSaveTemplate.textContent = 'Salvo!';
+                btnSaveTemplate.classList.remove('btn-primary');
+                btnSaveTemplate.classList.add('btn-outline-primary');
+                
+                setTimeout(() => {
+                    btnSaveTemplate.textContent = originalText;
+                    btnSaveTemplate.classList.remove('btn-outline-primary');
+                    btnSaveTemplate.classList.add('btn-primary');
+                }, 2000);
+                
+                // Update preview
+                updateMessagePreview();
+            });
+
+            // Template textarea change
+            templateTextarea.addEventListener('input', updateMessagePreview);
+        }
+
+        // Update preview clients dropdown based on category
+        function updatePreviewClientsDropdown(category) {
+            const previewClient = document.getElementById('previewClient');
+            previewClient.innerHTML = '';
+            
+            // Filter clients by category
+            let filteredClients = [];
+            
+            switch(category) {
+                case 'ativos-recentes':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo <= 30);
+                    break;
+                case 'ativos':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60);
+                    break;
+                case 'risco':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90);
+                    break;
+                case 'risco-alto':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180);
+                    break;
+                case 'inativos':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365);
+                    break;
+                case 'perdidos':
+                    filteredClients = ultimasCompras.filter(c => c.dias_inativo > 365);
+                    break;
+            }
+            
+            // Add options
+            if (filteredClients.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'Nenhum cliente nesta categoria';
+                previewClient.appendChild(option);
+            } else {
+                filteredClients.forEach(cliente => {
+                    const option = document.createElement('option');
+                    option.value = JSON.stringify(cliente);
+                    option.textContent = cliente.nome;
+                    previewClient.appendChild(option);
+                });
+            }
+            
+            // Update preview
+            updateMessagePreview();
+        }
+
+        // Update message preview
+        function updateMessagePreview() {
+            const templateTextarea = document.getElementById('messageTemplate');
+            const previewClient = document.getElementById('previewClient');
+            const previewArea = document.getElementById('mensagem-preview');
+            
+            let template = templateTextarea.value;
+            let clienteJson = previewClient.value;
+            
+            if (!clienteJson) {
+                previewArea.innerHTML = '<p class="text-muted">Selecione um cliente para visualizar a prévia da mensagem.</p>';
+                return;
+            }
+            
+            try {
+                const cliente = JSON.parse(clienteJson);
+                
+                // Replace variables
+                let message = template
+                    .replace(/{nome}/g, cliente.nome)
+                    .replace(/{dias_inativo}/g, cliente.dias_inativo)
+                    .replace(/{ultima_compra}/g, formatDate(cliente.data_ultima_compra))
+                    .replace(/{valor_ultima_compra}/g, formatCurrency(cliente.valor_ultima_compra));
+                
+                // Format message with paragraphs
+                message = message.split('\n').map(line => `<p>${line || '&nbsp;'}</p>`).join('');
+                
+                previewArea.innerHTML = message;
+            } catch (error) {
+                console.error('Erro ao gerar prévia da mensagem:', error);
+                previewArea.innerHTML = '<p class="text-danger">Erro ao gerar prévia da mensagem.</p>';
+            }
+        }
+
+        // Client filtering setup
+        function setupClientFiltering() {
+            const searchInput = document.getElementById('busca-cliente');
+            const statusFilter = document.getElementById('filtro-status');
+            const filterButton = document.getElementById('btn-filtrar-clientes');
+            
+            filterButton.addEventListener('click', function() {
+                const searchTerm = searchInput.value.toLowerCase();
+                const statusValue = statusFilter.value;
+                
+                // Filter clients
+                filteredClientes = ultimasCompras.filter(cliente => {
+                    // Search term filter
+                    const matchesSearch = searchTerm === '' || 
+                        cliente.nome.toLowerCase().includes(searchTerm) || 
+                        (cliente.cpf && cliente.cpf.toLowerCase().includes(searchTerm));
+                    
+                    // Status filter
+                    let matchesStatus = true;
+                    if (statusValue) {
+                        const [min, max] = statusValue.split('-');
+                        if (max === '+') {
+                            matchesStatus = cliente.dias_inativo > parseInt(min);
+                        } else {
+                            matchesStatus = cliente.dias_inativo > parseInt(min) && cliente.dias_inativo <= parseInt(max);
                         }
                     }
-                }
+                    
+                    return matchesSearch && matchesStatus;
+                });
+                
+                // Reset pagination
+                currentPage = 1;
+                
+                // Update table
+                renderClientesTable();
             });
         }
 
@@ -1244,12 +1179,6 @@ Equipe Lui Bambini</textarea>
                 }
             });
         }
-
-        // Global variables to store file data
-        let vendasFile = null;
-        let clientesFile = null;
-        let vendasData = null;
-        let clientesData = null;
 
         // Handle file selection
         function handleFile(file, type) {
@@ -1335,7 +1264,7 @@ Equipe Lui Bambini</textarea>
         // Check if both files are uploaded
         function checkFilesUploaded() {
             const nextButton = document.getElementById('btn-next-step1');
-            if (vendasFile && clientesFile) {
+            if (vendasData && clientesData) {
                 nextButton.disabled = false;
             } else {
                 nextButton.disabled = true;
@@ -1373,7 +1302,7 @@ Equipe Lui Bambini</textarea>
         }
 
         // Process the data
-        function startProcessing() {
+        async function startProcessing() {
             const processingLog = document.getElementById('processing-log');
             const progressBar = document.getElementById('processing-progress');
             const processingStatus = document.getElementById('processing-status');
@@ -1397,64 +1326,238 @@ Equipe Lui Bambini</textarea>
                 processingLog.scrollTop = processingLog.scrollHeight;
             }
             
-            // Simulate processing steps
-            log('Iniciando processamento dos dados...');
+            // Get column mappings
+            const vendasMapping = {
+                data: document.getElementById('map-vendas-data').value,
+                movimentacao: document.getElementById('map-vendas-movimentacao').value,
+                quantidade: document.getElementById('map-vendas-quantidade').value,
+                total: document.getElementById('map-vendas-total').value,
+                cliente: document.getElementById('map-vendas-cliente').value,
+                vendedor: document.getElementById('map-vendas-vendedor').value,
+                telefone: document.getElementById('map-vendas-telefone').value,
+                custo: document.getElementById('map-vendas-custo').value,
+                lucro: document.getElementById('map-vendas-lucro').value
+            };
             
-            setTimeout(() => {
+            const clientesMapping = {
+                id: document.getElementById('map-clientes-id').value,
+                nome: document.getElementById('map-clientes-nome').value,
+                cpf: document.getElementById('map-clientes-cpf').value,
+                telefone1: document.getElementById('map-clientes-telefone1').value,
+                telefone2: document.getElementById('map-clientes-telefone2').value,
+                telefone3: document.getElementById('map-clientes-telefone3').value,
+                data: document.getElementById('map-clientes-data').value,
+                credito: document.getElementById('map-clientes-credito').value
+            };
+            
+            try {
+                // Process vendas data
                 log('Lendo planilha de vendas...');
                 progressBar.style.width = '10%';
                 
-                setTimeout(() => {
-                    log(`Processados ${vendasData.length - 1} registros de vendas.`);
-                    progressBar.style.width = '20%';
+                const vendasHeaders = vendasData[0];
+                const vendasRows = vendasData.slice(1);
+                
+                // Map column indices
+                const vendasIndices = {};
+                for (const [key, value] of Object.entries(vendasMapping)) {
+                    vendasIndices[key] = vendasHeaders.indexOf(value);
+                    if (vendasIndices[key] === -1) {
+                        throw new Error(`Coluna "${value}" não encontrada na planilha de vendas.`);
+                    }
+                }
+                
+                // Process vendas rows
+                vendasProcessadas = vendasRows.map(row => {
+                    return {
+                        data: row[vendasIndices.data],
+                        movimentacao: row[vendasIndices.movimentacao],
+                        quantidade: row[vendasIndices.quantidade],
+                        total: row[vendasIndices.total],
+                        cliente: row[vendasIndices.cliente],
+                        vendedor: row[vendasIndices.vendedor],
+                        telefone: row[vendasIndices.telefone],
+                        custo: row[vendasIndices.custo],
+                        lucro: row[vendasIndices.lucro]
+                    };
+                });
+                
+                log(`Processados ${vendasProcessadas.length} registros de vendas.`);
+                progressBar.style.width = '20%';
+                
+                // Process clientes data
+                log('Lendo planilha de clientes...');
+                progressBar.style.width = '30%';
+                
+                const clientesHeaders = clientesData[0];
+                const clientesRows = clientesData.slice(1);
+                
+                // Map column indices
+                const clientesIndices = {};
+                for (const [key, value] of Object.entries(clientesMapping)) {
+                    clientesIndices[key] = clientesHeaders.indexOf(value);
+                    if (clientesIndices[key] === -1) {
+                        throw new Error(`Coluna "${value}" não encontrada na planilha de clientes.`);
+                    }
+                }
+                
+                // Process clientes rows
+                clientesProcessados = clientesRows.map(row => {
+                    return {
+                        third_id: row[clientesIndices.id],
+                        nome: row[clientesIndices.nome],
+                        cpf: row[clientesIndices.cpf],
+                        telefone_1: row[clientesIndices.telefone1],
+                        telefone_2: row[clientesIndices.telefone2],
+                        telefone_3: row[clientesIndices.telefone3],
+                        data_cadastro: row[clientesIndices.data],
+                        credito_loja: row[clientesIndices.credito]
+                    };
+                });
+                
+                log(`Processados ${clientesProcessados.length} registros de clientes.`);
+                progressBar.style.width = '40%';
+                
+                // Integrate data
+                log('Integrando dados de vendas e clientes...');
+                progressBar.style.width = '50%';
+                
+                // Create a map of telefone -> cliente
+                const clientesByTelefone = {};
+                clientesProcessados.forEach(cliente => {
+                    if (cliente.telefone_1) clientesByTelefone[cliente.telefone_1] = cliente;
+                    if (cliente.telefone_2) clientesByTelefone[cliente.telefone_2] = cliente;
+                    if (cliente.telefone_3) clientesByTelefone[cliente.telefone_3] = cliente;
+                });
+                
+                // Match vendas with clientes
+                const vendasWithCliente = vendasProcessadas.map(venda => {
+                    const cliente = clientesByTelefone[venda.telefone];
+                    return {
+                        ...venda,
+                        cliente_id: cliente ? cliente.third_id : null,
+                        cliente_nome: cliente ? cliente.nome : venda.cliente,
+                        cliente_cpf: cliente ? cliente.cpf : null
+                    };
+                });
+                
+                log('Calculando tempo desde última compra...');
+                progressBar.style.width = '60%';
+                
+                // Group vendas by cliente
+                const vendasByCliente = {};
+                vendasWithCliente.forEach(venda => {
+                    if (!venda.cliente_id) return;
                     
-                    setTimeout(() => {
-                        log('Lendo planilha de clientes...');
-                        progressBar.style.width = '30%';
+                    if (!vendasByCliente[venda.cliente_id]) {
+                        vendasByCliente[venda.cliente_id] = [];
+                    }
+                    
+                    vendasByCliente[venda.cliente_id].push(venda);
+                });
+                
+                // Calculate last purchase for each cliente
+                ultimasCompras = [];
+                for (const [clienteId, vendas] of Object.entries(vendasByCliente)) {
+                    // Sort vendas by date (newest first)
+                    vendas.sort((a, b) => new Date(b.data) - new Date(a.data));
+                    
+                    const ultimaVenda = vendas[0];
+                    const cliente = clientesProcessados.find(c => c.third_id === clienteId);
+                    
+                    if (cliente && ultimaVenda) {
+                        const dataUltimaCompra = new Date(ultimaVenda.data);
+                        const hoje = new Date();
+                        const diasInativo = Math.floor((hoje - dataUltimaCompra) / (1000 * 60 * 60 * 24));
                         
-                        setTimeout(() => {
-                            log(`Processados ${clientesData.length - 1} registros de clientes.`);
-                            progressBar.style.width = '40%';
-                            
-                            setTimeout(() => {
-                                log('Integrando dados de vendas e clientes...');
-                                progressBar.style.width = '60%';
-                                
-                                setTimeout(() => {
-                                    log('Calculando tempo desde última compra...');
-                                    progressBar.style.width = '80%';
-                                    
-                                    setTimeout(() => {
-                                        log('Salvando dados no banco de dados...');
-                                        progressBar.style.width = '90%';
-                                        
-                                        setTimeout(() => {
-                                            const endTime = new Date();
-                                            const processingTime = (endTime - startTime) / 1000;
-                                            
-                                            log(`Processamento concluído em ${processingTime.toFixed(1)} segundos.`);
-                                            progressBar.style.width = '100%';
-                                            processingStatus.textContent = 'Processamento concluído!';
-                                            processingStatus.classList.add('text-success');
-                                            document.getElementById('processing-spinner').style.display = 'none';
-                                            
-                                            // Update conclusion data
-                                            document.getElementById('conclusion-clientes').textContent = clientesData.length - 1;
-                                            document.getElementById('conclusion-vendas').textContent = vendasData.length - 1;
-                                            document.getElementById('conclusion-ultima-compra').textContent = Math.floor((clientesData.length - 1) * 0.8);
-                                            document.getElementById('conclusion-tempo').textContent = `${processingTime.toFixed(1)} segundos`;
-                                            
-                                            // Enable next button
-                                            nextButton.disabled = false;
-                                            prevButton.disabled = false;
-                                        }, 1000);
-                                    }, 1000);
-                                }, 1000);
-                            }, 1000);
-                        }, 1000);
-                    }, 1000);
-                }, 1000);
-            }, 1000);
+                        ultimasCompras.push({
+                            cliente_id: clienteId,
+                            nome: cliente.nome,
+                            cpf: cliente.cpf,
+                            telefone: cliente.telefone_1 || cliente.telefone_2 || cliente.telefone_3,
+                            data_ultima_compra: dataUltimaCompra,
+                            valor_ultima_compra: ultimaVenda.total,
+                            dias_inativo: diasInativo
+                        });
+                    }
+                }
+                
+                log(`Calculado tempo desde última compra para ${ultimasCompras.length} clientes.`);
+                progressBar.style.width = '70%';
+                
+                // Save data to Supabase
+                log('Salvando dados no Supabase...');
+                progressBar.style.width = '80%';
+                
+                // Clear existing tables
+                log('Limpando tabelas existentes...');
+                await supabase.from('ultima_compra').delete().neq('id', 0);
+                await supabase.from('vendas').delete().neq('id', 0);
+                await supabase.from('clientes').delete().neq('id', 0);
+                
+                // Insert clientes
+                log('Inserindo dados de clientes...');
+                for (let i = 0; i < clientesProcessados.length; i += 100) {
+                    const batch = clientesProcessados.slice(i, i + 100);
+                    const { error } = await supabase.from('clientes').insert(batch);
+                    if (error) {
+                        log(`Erro ao inserir clientes: ${error.message}`);
+                    } else {
+                        log(`Inseridos ${batch.length} clientes (lote ${Math.floor(i/100) + 1})`);
+                    }
+                }
+                
+                // Insert vendas
+                log('Inserindo dados de vendas...');
+                for (let i = 0; i < vendasProcessadas.length; i += 100) {
+                    const batch = vendasProcessadas.slice(i, i + 100);
+                    const { error } = await supabase.from('vendas').insert(batch);
+                    if (error) {
+                        log(`Erro ao inserir vendas: ${error.message}`);
+                    } else {
+                        log(`Inseridas ${batch.length} vendas (lote ${Math.floor(i/100) + 1})`);
+                    }
+                }
+                
+                // Insert ultima_compra
+                log('Inserindo dados de última compra...');
+                for (let i = 0; i < ultimasCompras.length; i += 100) {
+                    const batch = ultimasCompras.slice(i, i + 100);
+                    const { error } = await supabase.from('ultima_compra').insert(batch);
+                    if (error) {
+                        log(`Erro ao inserir última compra: ${error.message}`);
+                    } else {
+                        log(`Inseridos ${batch.length} registros de última compra (lote ${Math.floor(i/100) + 1})`);
+                    }
+                }
+                
+                progressBar.style.width = '100%';
+                
+                const endTime = new Date();
+                const processingTime = (endTime - startTime) / 1000;
+                
+                log(`Processamento concluído em ${processingTime.toFixed(1)} segundos.`);
+                processingStatus.textContent = 'Processamento concluído!';
+                processingStatus.classList.add('text-success');
+                document.getElementById('processing-spinner').style.display = 'none';
+                
+                // Update conclusion data
+                document.getElementById('conclusion-clientes').textContent = clientesProcessados.length;
+                document.getElementById('conclusion-vendas').textContent = vendasProcessadas.length;
+                document.getElementById('conclusion-ultima-compra').textContent = ultimasCompras.length;
+                document.getElementById('conclusion-tempo').textContent = `${processingTime.toFixed(1)} segundos`;
+                
+                // Enable next button
+                nextButton.disabled = false;
+                prevButton.disabled = false;
+                
+            } catch (error) {
+                console.error('Erro durante o processamento:', error);
+                log(`ERRO: ${error.message}`);
+                processingStatus.textContent = 'Erro no processamento!';
+                processingStatus.classList.add('text-danger');
+                prevButton.disabled = false;
+            }
         }
 
         // Reset import process
@@ -1480,9 +1583,456 @@ Equipe Lui Bambini</textarea>
             document.getElementById('processing-progress').style.width = '0%';
             document.getElementById('processing-spinner').style.display = 'inline-block';
             document.getElementById('processing-status').textContent = 'Processando dados...';
-            document.getElementById('processing-status').classList.remove('text-success');
+            document.getElementById('processing-status').classList.remove('text-success', 'text-danger');
             document.getElementById('processing-log').innerHTML = '<div class="text-muted">Aguardando início do processamento...</div>';
         }
+
+        // Load data from Supabase
+        async function loadDataFromSupabase() {
+            try {
+                // Load ultima_compra data
+                const { data: ultimaCompraData, error: ultimaCompraError } = await supabase
+                    .from('ultima_compra')
+                    .select('*');
+                
+                if (ultimaCompraError) {
+                    console.error('Erro ao carregar dados de última compra:', ultimaCompraError);
+                    return;
+                }
+                
+                // Process data
+                ultimasCompras = ultimaCompraData.map(item => ({
+                    ...item,
+                    data_ultima_compra: new Date(item.data_ultima_compra)
+                }));
+                
+                // Update dashboard
+                updateDashboard();
+                
+                // Update clientes table
+                filteredClientes = [...ultimasCompras];
+                renderClientesTable();
+                
+                // Update message templates
+                updateCategoryCounts();
+                updatePreviewClientsDropdown('ativos-recentes');
+                
+                // Update statistics
+                updateStatistics();
+                
+            } catch (error) {
+                console.error('Erro ao carregar dados do Supabase:', error);
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            // Update stats
+            const ativos = ultimasCompras.filter(c => c.dias_inativo <= 60).length;
+            const risco = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 180).length;
+            const inativos = ultimasCompras.filter(c => c.dias_inativo > 180).length;
+            const tempoMedio = Math.round(ultimasCompras.reduce((sum, c) => sum + c.dias_inativo, 0) / ultimasCompras.length);
+            
+            document.getElementById('dashboard-ativos').textContent = ativos;
+            document.getElementById('dashboard-risco').textContent = risco;
+            document.getElementById('dashboard-inativos').textContent = inativos;
+            document.getElementById('dashboard-tempo-medio').textContent = `${tempoMedio} dias`;
+            
+            // Update distribution chart
+            const distributionData = [
+                ultimasCompras.filter(c => c.dias_inativo <= 30).length,
+                ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length,
+                ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length,
+                ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length,
+                ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length,
+                ultimasCompras.filter(c => c.dias_inativo > 365).length
+            ];
+            
+            if (distributionChart) {
+                distributionChart.data.datasets[0].data = distributionData;
+                distributionChart.update();
+            } else {
+                const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+                distributionChart = new Chart(distributionCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0-30 dias', '31-60 dias', '61-90 dias', '91-180 dias', '181-365 dias', '>365 dias'],
+                        datasets: [{
+                            label: 'Número de Clientes',
+                            data: distributionData,
+                            backgroundColor: [
+                                'rgba(40, 167, 69, 0.7)',
+                                'rgba(40, 167, 69, 0.5)',
+                                'rgba(255, 193, 7, 0.7)',
+                                'rgba(255, 193, 7, 0.5)',
+                                'rgba(220, 53, 69, 0.7)',
+                                'rgba(220, 53, 69, 0.5)'
+                            ],
+                            borderColor: [
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(255, 193, 7, 1)',
+                                'rgba(255, 193, 7, 1)',
+                                'rgba(220, 53, 69, 1)',
+                                'rgba(220, 53, 69, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update clientes que precisam de atenção
+            const clientesAtencao = ultimasCompras
+                .filter(c => c.dias_inativo > 60)
+                .sort((a, b) => b.dias_inativo - a.dias_inativo)
+                .slice(0, 5);
+            
+            const clientesAtencaoHtml = clientesAtencao.map(cliente => `
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    ${cliente.nome}
+                    <span class="badge ${getBadgeClass(cliente.dias_inativo)} rounded-pill">${cliente.dias_inativo} dias</span>
+                </li>
+            `).join('');
+            
+            document.getElementById('clientes-atencao').innerHTML = clientesAtencaoHtml || '<li class="list-group-item text-center">Nenhum cliente encontrado</li>';
+            
+            // Update últimas compras
+            const ultimasComprasRecentes = [...ultimasCompras]
+                .sort((a, b) => b.data_ultima_compra - a.data_ultima_compra)
+                .slice(0, 5);
+            
+            const ultimasComprasHtml = ultimasComprasRecentes.map(compra => `
+                <tr>
+                    <td>${compra.nome}</td>
+                    <td>${formatDate(compra.data_ultima_compra)}</td>
+                    <td>${formatCurrency(compra.valor_ultima_compra)}</td>
+                    <td>${compra.dias_inativo}</td>
+                    <td><span class="badge ${getBadgeClass(compra.dias_inativo)}">${getStatusText(compra.dias_inativo)}</span></td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('ultimas-compras').innerHTML = ultimasComprasHtml || '<tr><td colspan="5" class="text-center">Nenhum registro encontrado</td></tr>';
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            // Update client distribution chart
+            const distributionData = [
+                ultimasCompras.filter(c => c.dias_inativo <= 30).length / ultimasCompras.length * 100,
+                ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length / ultimasCompras.length * 100,
+                ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length / ultimasCompras.length * 100,
+                ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length / ultimasCompras.length * 100,
+                ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length / ultimasCompras.length * 100,
+                ultimasCompras.filter(c => c.dias_inativo > 365).length / ultimasCompras.length * 100
+            ];
+            
+            if (clientDistributionChart) {
+                clientDistributionChart.data.datasets[0].data = distributionData;
+                clientDistributionChart.update();
+            } else {
+                const clientDistributionCtx = document.getElementById('clientDistributionChart').getContext('2d');
+                clientDistributionChart = new Chart(clientDistributionCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Ativos Recentes', 'Ativos', 'Em Risco', 'Em Risco Alto', 'Inativos', 'Perdidos'],
+                        datasets: [{
+                            data: distributionData,
+                            backgroundColor: [
+                                'rgba(40, 167, 69, 0.7)',
+                                'rgba(40, 167, 69, 0.5)',
+                                'rgba(255, 193, 7, 0.7)',
+                                'rgba(255, 193, 7, 0.5)',
+                                'rgba(220, 53, 69, 0.7)',
+                                'rgba(220, 53, 69, 0.5)'
+                            ],
+                            borderColor: [
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(40, 167, 69, 1)',
+                                'rgba(255, 193, 7, 1)',
+                                'rgba(255, 193, 7, 1)',
+                                'rgba(220, 53, 69, 1)',
+                                'rgba(220, 53, 69, 1)'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        plugins: {
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw.toFixed(1)}%`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update inactivity trend chart (simulated data)
+            if (!inactivityTrendChart) {
+                const inactivityTrendCtx = document.getElementById('inactivityTrendChart').getContext('2d');
+                inactivityTrendChart = new Chart(inactivityTrendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro'],
+                        datasets: [
+                            {
+                                label: 'Ativos',
+                                data: [410, 425, 440, 430, 445, 428],
+                                borderColor: 'rgba(40, 167, 69, 1)',
+                                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Em Risco',
+                                data: [210, 205, 215, 225, 230, 225],
+                                borderColor: 'rgba(255, 193, 7, 1)',
+                                backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            },
+                            {
+                                label: 'Inativos',
+                                data: [150, 155, 160, 155, 150, 157],
+                                borderColor: 'rgba(220, 53, 69, 1)',
+                                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                                fill: true,
+                                tension: 0.4
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Update resumo por categoria
+            const ativosRecentes = ultimasCompras.filter(c => c.dias_inativo <= 30);
+            const ativos = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60);
+            const risco = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90);
+            const riscoAlto = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180);
+            const inativos = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365);
+            const perdidos = ultimasCompras.filter(c => c.dias_inativo > 365);
+            
+            const total = ultimasCompras.length;
+            
+            const valorMedioAtivosRecentes = ativosRecentes.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / ativosRecentes.length;
+            const valorMedioAtivos = ativos.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / ativos.length;
+            const valorMedioRisco = risco.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / risco.length;
+            const valorMedioRiscoAlto = riscoAlto.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / riscoAlto.length;
+            const valorMedioInativos = inativos.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / inativos.length;
+            const valorMedioPerdidos = perdidos.reduce((sum, c) => sum + c.valor_ultima_compra, 0) / perdidos.length;
+            
+            const resumoHtml = `
+                <tr>
+                    <td>Ativos Recentes (0-30 dias)</td>
+                    <td>${ativosRecentes.length}</td>
+                    <td>${(ativosRecentes.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioAtivosRecentes)}</td>
+                    <td>Oferecer produtos complementares</td>
+                </tr>
+                <tr>
+                    <td>Ativos (31-60 dias)</td>
+                    <td>${ativos.length}</td>
+                    <td>${(ativos.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioAtivos)}</td>
+                    <td>Enviar novidades e promoções</td>
+                </tr>
+                <tr>
+                    <td>Em Risco (61-90 dias)</td>
+                    <td>${risco.length}</td>
+                    <td>${(risco.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioRisco)}</td>
+                    <td>Oferecer desconto para retorno</td>
+                </tr>
+                <tr>
+                    <td>Em Risco Alto (91-180 dias)</td>
+                    <td>${riscoAlto.length}</td>
+                    <td>${(riscoAlto.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioRiscoAlto)}</td>
+                    <td>Contato telefônico e desconto especial</td>
+                </tr>
+                <tr>
+                    <td>Inativos (181-365 dias)</td>
+                    <td>${inativos.length}</td>
+                    <td>${(inativos.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioInativos)}</td>
+                    <td>Campanha de reativação</td>
+                </tr>
+                <tr>
+                    <td>Perdidos (>365 dias)</td>
+                    <td>${perdidos.length}</td>
+                    <td>${(perdidos.length / total * 100).toFixed(1)}%</td>
+                    <td>${formatCurrency(valorMedioPerdidos)}</td>
+                    <td>Pesquisa de satisfação e oferta exclusiva</td>
+                </tr>
+            `;
+            
+            document.getElementById('resumo-categorias').innerHTML = resumoHtml;
+        }
+
+        // Update category counts
+        function updateCategoryCounts() {
+            document.getElementById('count-ativos-recentes').textContent = ultimasCompras.filter(c => c.dias_inativo <= 30).length;
+            document.getElementById('count-ativos').textContent = ultimasCompras.filter(c => c.dias_inativo > 30 && c.dias_inativo <= 60).length;
+            document.getElementById('count-risco').textContent = ultimasCompras.filter(c => c.dias_inativo > 60 && c.dias_inativo <= 90).length;
+            document.getElementById('count-risco-alto').textContent = ultimasCompras.filter(c => c.dias_inativo > 90 && c.dias_inativo <= 180).length;
+            document.getElementById('count-inativos').textContent = ultimasCompras.filter(c => c.dias_inativo > 180 && c.dias_inativo <= 365).length;
+            document.getElementById('count-perdidos').textContent = ultimasCompras.filter(c => c.dias_inativo > 365).length;
+        }
+
+        // Render clientes table
+        function renderClientesTable() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageItems = filteredClientes.slice(startIndex, endIndex);
+            
+            const tableHtml = pageItems.map(cliente => `
+                <tr>
+                    <td>${cliente.nome}</td>
+                    <td>${cliente.cpf || '-'}</td>
+                    <td>${cliente.telefone || '-'}</td>
+                    <td>${formatDate(cliente.data_ultima_compra)}</td>
+                    <td>${cliente.dias_inativo}</td>
+                    <td><span class="badge ${getBadgeClass(cliente.dias_inativo)}">${getStatusText(cliente.dias_inativo)}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="showClienteDetails('${cliente.cliente_id}')">Detalhes</button>
+                        <button class="btn btn-sm btn-outline-success" onclick="showClienteMessage('${cliente.cliente_id}')">Mensagem</button>
+                    </td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('lista-clientes').innerHTML = tableHtml || '<tr><td colspan="7" class="text-center">Nenhum cliente encontrado</td></tr>';
+            
+            // Update pagination
+            const totalPages = Math.ceil(filteredClientes.length / itemsPerPage);
+            let paginationHtml = '';
+            
+            if (totalPages > 1) {
+                paginationHtml += `
+                    <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Anterior</a>
+                    </li>
+                `;
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    if (i === currentPage) {
+                        paginationHtml += `<li class="page-item active"><a class="page-link" href="#">${i}</a></li>`;
+                    } else if (i <= 3 || i >= totalPages - 2 || Math.abs(i - currentPage) <= 1) {
+                        paginationHtml += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a></li>`;
+                    } else if (Math.abs(i - currentPage) === 2) {
+                        paginationHtml += `<li class="page-item disabled"><a class="page-link" href="#">...</a></li>`;
+                    }
+                }
+                
+                paginationHtml += `
+                    <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Próximo</a>
+                    </li>
+                `;
+            }
+            
+            document.getElementById('paginacao-clientes').innerHTML = paginationHtml;
+        }
+
+        // Helper functions
+        function formatDate(date) {
+            if (!date) return '-';
+            const d = new Date(date);
+            return d.toLocaleDateString('pt-BR');
+        }
+
+        function formatCurrency(value) {
+            if (value === undefined || value === null) return 'R$ 0,00';
+            return `R$ ${parseFloat(value).toFixed(2).replace('.', ',')}`;
+        }
+
+        function getBadgeClass(diasInativo) {
+            if (diasInativo <= 30) return 'bg-success';
+            if (diasInativo <= 60) return 'bg-success';
+            if (diasInativo <= 90) return 'bg-warning';
+            if (diasInativo <= 180) return 'bg-warning';
+            if (diasInativo <= 365) return 'bg-danger';
+            return 'bg-danger';
+        }
+
+        function getStatusText(diasInativo) {
+            if (diasInativo <= 30) return 'Ativo';
+            if (diasInativo <= 60) return 'Ativo';
+            if (diasInativo <= 90) return 'Em Risco';
+            if (diasInativo <= 180) return 'Em Risco Alto';
+            if (diasInativo <= 365) return 'Inativo';
+            return 'Perdido';
+        }
+
+        // Global functions for pagination and client details
+        window.changePage = function(page) {
+            currentPage = page;
+            renderClientesTable();
+        };
+
+        window.showClienteDetails = function(clienteId) {
+            const cliente = ultimasCompras.find(c => c.cliente_id === clienteId);
+            if (!cliente) return;
+            
+            alert(`Detalhes do Cliente:\nNome: ${cliente.nome}\nCPF: ${cliente.cpf || '-'}\nTelefone: ${cliente.telefone || '-'}\nÚltima Compra: ${formatDate(cliente.data_ultima_compra)}\nValor: ${formatCurrency(cliente.valor_ultima_compra)}\nDias Inativo: ${cliente.dias_inativo}`);
+        };
+
+        window.showClienteMessage = function(clienteId) {
+            const cliente = ultimasCompras.find(c => c.cliente_id === clienteId);
+            if (!cliente) return;
+            
+            // Navigate to mensagens page
+            document.querySelector('.nav-link[data-page="mensagens"]').click();
+            
+            // Select appropriate category
+            let category;
+            if (cliente.dias_inativo <= 30) category = 'ativos-recentes';
+            else if (cliente.dias_inativo <= 60) category = 'ativos';
+            else if (cliente.dias_inativo <= 90) category = 'risco';
+            else if (cliente.dias_inativo <= 180) category = 'risco-alto';
+            else if (cliente.dias_inativo <= 365) category = 'inativos';
+            else category = 'perdidos';
+            
+            document.querySelector(`#categorias-clientes a[data-category="${category}"]`).click();
+            
+            // Select client in dropdown
+            const previewClient = document.getElementById('previewClient');
+            for (let i = 0; i < previewClient.options.length; i++) {
+                try {
+                    const option = previewClient.options[i];
+                    const optionData = JSON.parse(option.value);
+                    if (optionData.cliente_id === clienteId) {
+                        previewClient.selectedIndex = i;
+                        break;
+                    }
+                } catch (e) {}
+            }
+            
+            // Update preview
+            updateMessagePreview();
+        };
     </script>
 </body>
 </html>

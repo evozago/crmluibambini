@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico CRM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .success {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Diagnóstico CRM Lui Bambini</h1>
+        
+        <div class="card">
+            <h2>1. Verificação do Ambiente</h2>
+            <div id="ambiente-log" class="log"></div>
+            <button id="verificar-ambiente">Verificar Ambiente</button>
+        </div>
+        
+        <div class="card">
+            <h2>2. Teste de Leitura de Arquivo</h2>
+            <input type="file" id="teste-arquivo" accept=".xlsx,.xls">
+            <div id="arquivo-log" class="log"></div>
+            <button id="testar-arquivo">Testar Leitura</button>
+        </div>
+        
+        <div class="card">
+            <h2>3. Teste de Processamento</h2>
+            <p>Selecione um arquivo Excel para testar o processamento básico:</p>
+            <input type="file" id="teste-processamento" accept=".xlsx,.xls">
+            <div id="processamento-log" class="log"></div>
+            <button id="testar-processamento">Testar Processamento</button>
+        </div>
+        
+        <div class="card">
+            <h2>4. Resultados do Diagnóstico</h2>
+            <div id="resultado-diagnostico"></div>
+        </div>
+    </div>
+
+    <script>
+        // Função para adicionar mensagens ao log
+        function log(elementId, message, isError = false) {
+            const now = new Date().toLocaleTimeString();
+            const logElement = document.getElementById(elementId);
+            const logEntry = document.createElement('div');
+            logEntry.className = isError ? 'error' : '';
+            logEntry.textContent = `[${now}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${now}] ${message}`);
+        }
+        
+        // Verificação do ambiente
+        document.getElementById('verificar-ambiente').addEventListener('click', function() {
+            const ambienteLog = document.getElementById('ambiente-log');
+            ambienteLog.innerHTML = '';
+            
+            // Verificar se o navegador suporta FileReader
+            try {
+                if (typeof FileReader !== 'undefined') {
+                    log('ambiente-log', 'FileReader é suportado pelo navegador.');
+                } else {
+                    log('ambiente-log', 'FileReader NÃO é suportado pelo navegador.', true);
+                }
+            } catch (e) {
+                log('ambiente-log', `Erro ao verificar FileReader: ${e.message}`, true);
+            }
+            
+            // Verificar se o navegador suporta localStorage
+            try {
+                if (typeof localStorage !== 'undefined') {
+                    log('ambiente-log', 'localStorage é suportado pelo navegador.');
+                    
+                    // Testar gravação e leitura
+                    localStorage.setItem('teste', 'funcionando');
+                    const testValue = localStorage.getItem('teste');
+                    if (testValue === 'funcionando') {
+                        log('ambiente-log', 'localStorage está funcionando corretamente.');
+                    } else {
+                        log('ambiente-log', 'localStorage não está funcionando corretamente.', true);
+                    }
+                } else {
+                    log('ambiente-log', 'localStorage NÃO é suportado pelo navegador.', true);
+                }
+            } catch (e) {
+                log('ambiente-log', `Erro ao verificar localStorage: ${e.message}`, true);
+            }
+            
+            // Verificar se o script XLSX está disponível
+            try {
+                if (typeof XLSX !== 'undefined') {
+                    log('ambiente-log', `SheetJS (XLSX) está disponível. Versão: ${XLSX.version}`);
+                } else {
+                    log('ambiente-log', 'SheetJS (XLSX) NÃO está disponível. Tentando carregar...', true);
+                    
+                    // Tentar carregar o script
+                    const script = document.createElement('script');
+                    script.src = 'xlsx.full.min.js';
+                    script.onload = function() {
+                        log('ambiente-log', `SheetJS (XLSX) carregado com sucesso. Versão: ${XLSX.version}`);
+                    };
+                    script.onerror = function() {
+                        log('ambiente-log', 'Falha ao carregar SheetJS (XLSX).', true);
+                        
+                        // Tentar carregar da CDN
+                        const scriptCDN = document.createElement('script');
+                        scriptCDN.src = 'https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js';
+                        scriptCDN.onload = function() {
+                            log('ambiente-log', `SheetJS (XLSX) carregado da CDN com sucesso. Versão: ${XLSX.version}`);
+                        };
+                        scriptCDN.onerror = function() {
+                            log('ambiente-log', 'Falha ao carregar SheetJS (XLSX) da CDN.', true);
+                        };
+                        document.head.appendChild(scriptCDN);
+                    };
+                    document.head.appendChild(script);
+                }
+            } catch (e) {
+                log('ambiente-log', `Erro ao verificar XLSX: ${e.message}`, true);
+            }
+            
+            // Verificar memória disponível
+            try {
+                if (performance && performance.memory) {
+                    const memoryInfo = performance.memory;
+                    log('ambiente-log', `Memória total: ${Math.round(memoryInfo.totalJSHeapSize / (1024 * 1024))} MB`);
+                    log('ambiente-log', `Memória usada: ${Math.round(memoryInfo.usedJSHeapSize / (1024 * 1024))} MB`);
+                    log('ambiente-log', `Limite de memória: ${Math.round(memoryInfo.jsHeapSizeLimit / (1024 * 1024))} MB`);
+                } else {
+                    log('ambiente-log', 'Informações de memória não disponíveis.');
+                }
+            } catch (e) {
+                log('ambiente-log', `Erro ao verificar memória: ${e.message}`);
+            }
+            
+            // Resumo
+            log('ambiente-log', '--- Resumo da Verificação ---');
+            log('ambiente-log', 'Navegador: ' + navigator.userAgent);
+            log('ambiente-log', 'Plataforma: ' + navigator.platform);
+            log('ambiente-log', 'Verificação concluída.');
+        });
+        
+        // Teste de leitura de arquivo
+        document.getElementById('testar-arquivo').addEventListener('click', function() {
+            const fileInput = document.getElementById('teste-arquivo');
+            const arquivoLog = document.getElementById('arquivo-log');
+            arquivoLog.innerHTML = '';
+            
+            if (!fileInput.files.length) {
+                log('arquivo-log', 'Por favor, selecione um arquivo.', true);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log('arquivo-log', `Arquivo selecionado: ${file.name}`);
+            log('arquivo-log', `Tamanho: ${file.size} bytes`);
+            log('arquivo-log', `Tipo: ${file.type}`);
+            
+            // Verificar se o XLSX está disponível
+            if (typeof XLSX === 'undefined') {
+                log('arquivo-log', 'SheetJS (XLSX) não está disponível. Não é possível ler o arquivo.', true);
+                return;
+            }
+            
+            // Tentar ler o arquivo
+            try {
+                log('arquivo-log', 'Iniciando leitura do arquivo...');
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        log('arquivo-log', 'Arquivo carregado, processando...');
+                        
+                        const data = new Uint8Array(e.target.result);
+                        log('arquivo-log', `Dados binários lidos: ${data.length} bytes`);
+                        
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        log('arquivo-log', `Workbook lido com sucesso. Planilhas: ${workbook.SheetNames.join(', ')}`);
+                        
+                        const sheetName = workbook.SheetNames[0];
+                        log('arquivo-log', `Primeira planilha: ${sheetName}`);
+                        
+                        const worksheet = workbook.Sheets[sheetName];
+                        log('arquivo-log', 'Planilha carregada, convertendo para JSON...');
+                        
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        log('arquivo-log', `Conversão para JSON concluída. ${json.length} registros encontrados.`);
+                        
+                        if (json.length > 0) {
+                            log('arquivo-log', 'Primeiro registro:');
+                            log('arquivo-log', JSON.stringify(json[0], null, 2));
+                            
+                            // Listar colunas
+                            const colunas = Object.keys(json[0]);
+                            log('arquivo-log', `Colunas encontradas: ${colunas.join(', ')}`);
+                        }
+                        
+                        log('arquivo-log', 'Leitura concluída com sucesso.', false);
+                    } catch (error) {
+                        log('arquivo-log', `Erro ao processar o arquivo: ${error.message}`, true);
+                        console.error(error);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    log('arquivo-log', `Erro na leitura do arquivo: ${error}`, true);
+                };
+                
+                reader.readAsArrayBuffer(file);
+                
+            } catch (error) {
+                log('arquivo-log', `Erro ao iniciar a leitura: ${error.message}`, true);
+                console.error(error);
+            }
+        });
+        
+        // Teste de processamento
+        document.getElementById('testar-processamento').addEventListener('click', function() {
+            const fileInput = document.getElementById('teste-processamento');
+            const processamentoLog = document.getElementById('processamento-log');
+            processamentoLog.innerHTML = '';
+            
+            if (!fileInput.files.length) {
+                log('processamento-log', 'Por favor, selecione um arquivo.', true);
+                return;
+            }
+            
+            // Verificar se o XLSX está disponível
+            if (typeof XLSX === 'undefined') {
+                log('processamento-log', 'SheetJS (XLSX) não está disponível. Não é possível processar o arquivo.', true);
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            log('processamento-log', `Arquivo selecionado: ${file.name}`);
+            
+            // Tentar processar o arquivo
+            try {
+                log('processamento-log', 'Iniciando processamento...');
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        log('processamento-log', `Dados binários lidos: ${data.length} bytes`);
+                        
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        
+                        log('processamento-log', `${json.length} registros encontrados.`);
+                        
+                        // Simular processamento
+                        log('processamento-log', 'Simulando processamento de dados...');
+                        
+                        // Processar em lotes para evitar travamento
+                        const batchSize = 100;
+                        const totalBatches = Math.ceil(json.length / batchSize);
+                        
+                        processBatch(json, 0, batchSize, totalBatches);
+                        
+                    } catch (error) {
+                        log('processamento-log', `Erro ao processar o arquivo: ${error.message}`, true);
+                        console.error(error);
+                        
+                        // Atualizar resultados do diagnóstico
+                        atualizarResultadoDiagnostico(false, error.message);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    log('processamento-log', `Erro na leitura do arquivo: ${error}`, true);
+                    atualizarResultadoDiagnostico(false, `Erro na leitura do arquivo: ${error}`);
+                };
+                
+                reader.readAsArrayBuffer(file);
+                
+            } catch (error) {
+                log('processamento-log', `Erro ao iniciar o processamento: ${error.message}`, true);
+                console.error(error);
+                atualizarResultadoDiagnostico(false, `Erro ao iniciar o processamento: ${error.message}`);
+            }
+        });
+        
+        // Função para processar em lotes
+        function processBatch(data, startIndex, batchSize, totalBatches) {
+            const endIndex = Math.min(startIndex + batchSize, data.length);
+            const currentBatch = data.slice(startIndex, endIndex);
+            const batchNumber = Math.floor(startIndex / batchSize) + 1;
+            
+            log('processamento-log', `Processando lote ${batchNumber}/${totalBatches}...`);
+            
+            // Simular processamento
+            let processedItems = 0;
+            
+            for (const item of currentBatch) {
+                try {
+                    // Simular algum processamento
+                    const keys = Object.keys(item);
+                    const values = Object.values(item);
+                    
+                    // Verificar se há datas
+                    for (const key of keys) {
+                        const value = item[key];
+                        if (value instanceof Date) {
+                            // Processar data
+                            const formattedDate = value.toLocaleDateString('pt-BR');
+                            // Simular cálculo de dias
+                            const days = Math.floor((new Date() - value) / (1000 * 60 * 60 * 24));
+                        }
+                    }
+                    
+                    processedItems++;
+                } catch (e) {
+                    log('processamento-log', `Erro ao processar item: ${e.message}`, true);
+                }
+            }
+            
+            log('processamento-log', `Lote ${batchNumber} concluído. ${processedItems} itens processados.`);
+            
+            // Verificar se há mais lotes para processar
+            if (endIndex < data.length) {
+                // Usar setTimeout para evitar travamento
+                setTimeout(() => {
+                    processBatch(data, endIndex, batchSize, totalBatches);
+                }, 10);
+            } else {
+                log('processamento-log', 'Processamento concluído com sucesso!');
+                atualizarResultadoDiagnostico(true);
+            }
+        }
+        
+        // Função para atualizar o resultado do diagnóstico
+        function atualizarResultadoDiagnostico(sucesso, mensagemErro = '') {
+            const resultadoElement = document.getElementById('resultado-diagnostico');
+            
+            if (sucesso) {
+                resultadoElement.innerHTML = `
+                    <div class="success">
+                        <h3>✅ Diagnóstico Concluído com Sucesso</h3>
+                        <p>O ambiente está configurado corretamente e o processamento de arquivos Excel está funcionando.</p>
+                        <p>Recomendações:</p>
+                        <ul>
+                            <li>Verifique se suas planilhas estão no formato correto</li>
+                            <li>Certifique-se de que as colunas necessárias existem nas planilhas</li>
+                            <li>Tente usar arquivos Excel menores para teste</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                resultadoElement.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Problemas Detectados</h3>
+                        <p>Erro: ${mensagemErro}</p>
+                        <p>Possíveis soluções:</p>
+                        <ul>
+                            <li>Tente usar um navegador diferente (Chrome ou Firefox recomendados)</li>
+                            <li>Verifique se o JavaScript está habilitado no navegador</li>
+                            <li>Limpe o cache do navegador e tente novamente</li>
+                            <li>Tente usar arquivos Excel menores ou em formato diferente (.xlsx ou .xls)</li>
+                        </ul>
+                    </div>
+                `;
+            }
+        }
+    </script>
+    
+    <!-- Carregar SheetJS -->
+    <script src="xlsx.full.min.js"></script>
+</body>
+</html>

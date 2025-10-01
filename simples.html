@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Lui Bambini - Versão Simplificada</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        #log {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            font-family: monospace;
+        }
+        .result-table {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">CRM Lui Bambini - Importação Simplificada</h1>
+        
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Planilha de Vendas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area">
+                            <input type="file" id="vendas-file" class="form-control" accept=".xlsx,.xls">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Planilha de Clientes</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area">
+                            <input type="file" id="clientes-file" class="form-control" accept=".xlsx,.xls">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Processamento</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">Coluna de Cliente (Vendas):</label>
+                    <input type="text" id="coluna-cliente" class="form-control" value="Cliente" placeholder="Nome da coluna que contém o nome do cliente na planilha de vendas">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Coluna de Data (Vendas):</label>
+                    <input type="text" id="coluna-data" class="form-control" value="Data" placeholder="Nome da coluna que contém a data na planilha de vendas">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Coluna de Nome (Clientes):</label>
+                    <input type="text" id="coluna-nome" class="form-control" value="Nome" placeholder="Nome da coluna que contém o nome na planilha de clientes">
+                </div>
+                
+                <div class="progress mb-3">
+                    <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                
+                <div id="log" class="mb-3"></div>
+                
+                <button id="processar" class="btn btn-primary">Processar Planilhas</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h5>Resultados</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 id="total-clientes">0</h3>
+                                <p>Total de Clientes</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 id="clientes-ativos">0</h3>
+                                <p>Clientes Ativos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 id="clientes-inativos">0</h3>
+                                <p>Clientes Inativos</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h3 id="dias-medios">0</h3>
+                                <p>Dias Médios</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h5>Clientes Processados</h5>
+                <div class="table-responsive">
+                    <table class="table table-striped result-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Última Compra</th>
+                                <th>Dias Inativos</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultado">
+                            <tr>
+                                <td colspan="4" class="text-center">Nenhum dado processado</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="xlsx.full.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const vendasInput = document.getElementById('vendas-file');
+            const clientesInput = document.getElementById('clientes-file');
+            const processarBtn = document.getElementById('processar');
+            const logElement = document.getElementById('log');
+            const progressBar = document.getElementById('progress-bar');
+            const resultadoElement = document.getElementById('resultado');
+            
+            // Função para adicionar mensagens ao log
+            function log(message) {
+                const now = new Date().toLocaleTimeString();
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${now}] ${message}`;
+                logElement.appendChild(logEntry);
+                logElement.scrollTop = logElement.scrollHeight;
+                console.log(`[${now}] ${message}`);
+            }
+            
+            // Função para atualizar a barra de progresso
+            function updateProgress(percent) {
+                progressBar.style.width = `${percent}%`;
+                progressBar.textContent = `${percent}%`;
+                progressBar.setAttribute('aria-valuenow', percent);
+            }
+            
+            // Função para ler um arquivo Excel
+            function readExcelFile(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, {type: 'array'});
+                            const firstSheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[firstSheetName];
+                            const json = XLSX.utils.sheet_to_json(worksheet);
+                            resolve(json);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    
+                    reader.onerror = function(error) {
+                        reject(error);
+                    };
+                    
+                    reader.readAsArrayBuffer(file);
+                });
+            }
+            
+            // Função para processar os dados
+            processarBtn.addEventListener('click', async function() {
+                // Verificar se os arquivos foram selecionados
+                if (!vendasInput.files.length || !clientesInput.files.length) {
+                    alert('Por favor, selecione os dois arquivos.');
+                    return;
+                }
+                
+                // Desabilitar o botão durante o processamento
+                processarBtn.disabled = true;
+                
+                // Limpar o log e resetar a barra de progresso
+                logElement.innerHTML = '';
+                updateProgress(0);
+                
+                try {
+                    // Obter os nomes das colunas
+                    const colunaCliente = document.getElementById('coluna-cliente').value;
+                    const colunaData = document.getElementById('coluna-data').value;
+                    const colunaNome = document.getElementById('coluna-nome').value;
+                    
+                    if (!colunaCliente || !colunaData || !colunaNome) {
+                        alert('Por favor, preencha os nomes das colunas.');
+                        processarBtn.disabled = false;
+                        return;
+                    }
+                    
+                    // Ler os arquivos
+                    log('Lendo arquivo de vendas...');
+                    updateProgress(10);
+                    const vendasData = await readExcelFile(vendasInput.files[0]);
+                    log(`Arquivo de vendas lido com sucesso. ${vendasData.length} registros encontrados.`);
+                    
+                    updateProgress(30);
+                    log('Lendo arquivo de clientes...');
+                    const clientesData = await readExcelFile(clientesInput.files[0]);
+                    log(`Arquivo de clientes lido com sucesso. ${clientesData.length} registros encontrados.`);
+                    
+                    updateProgress(50);
+                    log('Processando dados...');
+                    
+                    // Criar um mapa de vendas por cliente
+                    const vendasPorCliente = {};
+                    vendasData.forEach(venda => {
+                        const cliente = venda[colunaCliente];
+                        if (cliente) {
+                            if (!vendasPorCliente[cliente]) {
+                                vendasPorCliente[cliente] = [];
+                            }
+                            vendasPorCliente[cliente].push(venda);
+                        }
+                    });
+                    
+                    updateProgress(70);
+                    
+                    // Processar os clientes
+                    const clientesProcessados = [];
+                    clientesData.forEach(cliente => {
+                        const nome = cliente[colunaNome];
+                        if (!nome) return;
+                        
+                        const vendasCliente = vendasPorCliente[nome] || [];
+                        
+                        // Encontrar a última venda
+                        let ultimaData = null;
+                        
+                        vendasCliente.forEach(venda => {
+                            const dataVenda = venda[colunaData];
+                            if (!dataVenda) return;
+                            
+                            let dataObj;
+                            try {
+                                // Converter para data
+                                if (dataVenda instanceof Date) {
+                                    dataObj = dataVenda;
+                                } else if (typeof dataVenda === 'string') {
+                                    // Tentar diferentes formatos de data
+                                    const parts = dataVenda.split('/');
+                                    if (parts.length === 3) {
+                                        // Formato DD/MM/YYYY
+                                        dataObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                                    } else {
+                                        dataObj = new Date(dataVenda);
+                                    }
+                                } else {
+                                    // Número (Excel armazena datas como números)
+                                    dataObj = new Date(1900, 0, dataVenda - 1);
+                                }
+                                
+                                // Verificar se é uma data válida
+                                if (isNaN(dataObj.getTime())) return;
+                                
+                                // Atualizar última data se for mais recente
+                                if (!ultimaData || dataObj > ultimaData) {
+                                    ultimaData = dataObj;
+                                }
+                            } catch (e) {
+                                console.error("Erro ao processar data:", dataVenda, e);
+                            }
+                        });
+                        
+                        // Calcular dias de inatividade
+                        let diasInativo = null;
+                        let ultimaCompraFormatada = 'N/A';
+                        
+                        if (ultimaData) {
+                            try {
+                                diasInativo = Math.floor((new Date() - ultimaData) / (1000 * 60 * 60 * 24));
+                                ultimaCompraFormatada = ultimaData.toLocaleDateString('pt-BR');
+                            } catch (e) {
+                                console.error("Erro ao calcular dias de inatividade:", e);
+                            }
+                        }
+                        
+                        // Determinar status
+                        let status = 'Sem compras';
+                        if (diasInativo !== null) {
+                            if (diasInativo <= 30) status = 'Ativo (0-30 dias)';
+                            else if (diasInativo <= 60) status = 'Ativo (31-60 dias)';
+                            else if (diasInativo <= 90) status = 'Em risco (61-90 dias)';
+                            else if (diasInativo <= 180) status = 'Em risco elevado (91-180 dias)';
+                            else if (diasInativo <= 365) status = 'Inativo (181-365 dias)';
+                            else status = 'Perdido (>365 dias)';
+                        }
+                        
+                        // Adicionar cliente processado
+                        clientesProcessados.push({
+                            nome: nome,
+                            ultimaCompra: ultimaCompraFormatada,
+                            diasInativo: diasInativo,
+                            status: status
+                        });
+                    });
+                    
+                    updateProgress(90);
+                    log(`Processamento concluído. ${clientesProcessados.length} clientes processados.`);
+                    
+                    // Salvar no localStorage
+                    localStorage.setItem('crm_data_simples', JSON.stringify(clientesProcessados));
+                    log('Dados salvos no armazenamento local.');
+                    
+                    // Atualizar estatísticas
+                    const totalClientes = clientesProcessados.length;
+                    const clientesAtivos = clientesProcessados.filter(c => c.diasInativo !== null && c.diasInativo <= 60).length;
+                    const clientesInativos = clientesProcessados.filter(c => c.diasInativo !== null && c.diasInativo > 180).length;
+                    const diasMedios = totalClientes > 0 ? 
+                        Math.floor(clientesProcessados.reduce((acc, c) => acc + (c.diasInativo || 0), 0) / totalClientes) : 0;
+                    
+                    document.getElementById('total-clientes').textContent = totalClientes;
+                    document.getElementById('clientes-ativos').textContent = clientesAtivos;
+                    document.getElementById('clientes-inativos').textContent = clientesInativos;
+                    document.getElementById('dias-medios').textContent = diasMedios;
+                    
+                    // Atualizar tabela de resultados
+                    resultadoElement.innerHTML = '';
+                    
+                    if (clientesProcessados.length > 0) {
+                        clientesProcessados.forEach(cliente => {
+                            const row = document.createElement('tr');
+                            
+                            const nomeCell = document.createElement('td');
+                            nomeCell.textContent = cliente.nome;
+                            row.appendChild(nomeCell);
+                            
+                            const ultimaCompraCell = document.createElement('td');
+                            ultimaCompraCell.textContent = cliente.ultimaCompra;
+                            row.appendChild(ultimaCompraCell);
+                            
+                            const diasInativoCell = document.createElement('td');
+                            diasInativoCell.textContent = cliente.diasInativo === null ? 'N/A' : cliente.diasInativo;
+                            row.appendChild(diasInativoCell);
+                            
+                            const statusCell = document.createElement('td');
+                            statusCell.textContent = cliente.status;
+                            row.appendChild(statusCell);
+                            
+                            resultadoElement.appendChild(row);
+                        });
+                    } else {
+                        const row = document.createElement('tr');
+                        const cell = document.createElement('td');
+                        cell.colSpan = 4;
+                        cell.textContent = 'Nenhum cliente processado';
+                        cell.className = 'text-center';
+                        row.appendChild(cell);
+                        resultadoElement.appendChild(row);
+                    }
+                    
+                    updateProgress(100);
+                    log('Atualização da interface concluída.');
+                    
+                } catch (error) {
+                    log(`Erro: ${error.message}`);
+                    console.error(error);
+                } finally {
+                    // Reabilitar o botão
+                    processarBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

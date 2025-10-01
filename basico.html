@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Básico - Lui Bambini</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .status-ativo {
+            background-color: #d4edda;
+        }
+        .status-risco {
+            background-color: #fff3cd;
+        }
+        .status-inativo {
+            background-color: #f8d7da;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0069d9;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            flex: 1;
+            border: 1px solid #ddd;
+            padding: 15px;
+            text-align: center;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+        .stat-box h3 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .stat-box p {
+            margin: 5px 0 0;
+            color: #666;
+        }
+        #log {
+            height: 150px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-family: monospace;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CRM Básico - Lui Bambini</h1>
+        
+        <div class="section">
+            <h2>Importação de Dados</h2>
+            <div>
+                <label for="vendas-file">Planilha de Vendas:</label>
+                <input type="file" id="vendas-file" accept=".xlsx,.xls">
+            </div>
+            <div>
+                <label for="clientes-file">Planilha de Clientes:</label>
+                <input type="file" id="clientes-file" accept=".xlsx,.xls">
+            </div>
+            <div>
+                <button id="processar">Processar Dados</button>
+            </div>
+            <div id="log"></div>
+        </div>
+        
+        <div class="section">
+            <h2>Dashboard</h2>
+            <div class="stats">
+                <div class="stat-box">
+                    <h3 id="total-clientes">0</h3>
+                    <p>Total de Clientes</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="clientes-ativos">0</h3>
+                    <p>Clientes Ativos</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="clientes-risco">0</h3>
+                    <p>Clientes em Risco</p>
+                </div>
+                <div class="stat-box">
+                    <h3 id="clientes-inativos">0</h3>
+                    <p>Clientes Inativos</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Lista de Clientes</h2>
+            <table id="tabela-clientes">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Última Compra</th>
+                        <th>Dias Inativos</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="4" style="text-align: center;">Nenhum dado disponível</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Função para adicionar mensagens ao log
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${now}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${now}] ${message}`);
+        }
+        
+        // Função para ler um arquivo Excel
+        function readExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = e.target.result;
+                        const workbook = XLSX.read(data, {type: 'binary'});
+                        const firstSheet = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheet];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        resolve(json);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    reject(error);
+                };
+                
+                reader.readAsBinaryString(file);
+            });
+        }
+        
+        // Função para processar os dados
+        document.getElementById('processar').addEventListener('click', async function() {
+            const vendasFile = document.getElementById('vendas-file').files[0];
+            const clientesFile = document.getElementById('clientes-file').files[0];
+            
+            if (!vendasFile || !clientesFile) {
+                alert('Por favor, selecione os dois arquivos.');
+                return;
+            }
+            
+            log('Iniciando processamento...');
+            
+            try {
+                // Ler os arquivos
+                log('Lendo arquivo de vendas...');
+                const vendas = await readExcel(vendasFile);
+                log(`Arquivo de vendas lido: ${vendas.length} registros`);
+                
+                log('Lendo arquivo de clientes...');
+                const clientes = await readExcel(clientesFile);
+                log(`Arquivo de clientes lido: ${clientes.length} registros`);
+                
+                // Processar os dados
+                log('Processando dados...');
+                const resultado = processarDados(vendas, clientes);
+                log('Processamento concluído!');
+                
+                // Atualizar a interface
+                atualizarDashboard(resultado);
+                atualizarTabela(resultado);
+                
+                // Salvar no localStorage
+                localStorage.setItem('crm_data_basico', JSON.stringify(resultado));
+                log('Dados salvos no localStorage.');
+                
+            } catch (error) {
+                log(`Erro: ${error.message}`);
+                console.error(error);
+            }
+        });
+        
+        // Função para processar os dados
+        function processarDados(vendas, clientes) {
+            // Criar um mapa de vendas por cliente
+            const vendasPorCliente = {};
+            
+            // Tentar diferentes nomes de colunas para cliente e data
+            const possiveisColunasCliente = ['Cliente', 'CLIENTE', 'cliente', 'Nome', 'NOME', 'nome', 'Customer', 'customer'];
+            const possiveisColunasData = ['Data', 'DATA', 'data', 'Date', 'date', 'Data Venda', 'DATA VENDA', 'data venda'];
+            
+            // Encontrar as colunas corretas
+            let colunaCliente = null;
+            let colunaData = null;
+            
+            // Verificar primeira venda para determinar colunas
+            if (vendas.length > 0) {
+                const primeiraVenda = vendas[0];
+                
+                for (const coluna of possiveisColunasCliente) {
+                    if (primeiraVenda[coluna] !== undefined) {
+                        colunaCliente = coluna;
+                        break;
+                    }
+                }
+                
+                for (const coluna of possiveisColunasData) {
+                    if (primeiraVenda[coluna] !== undefined) {
+                        colunaData = coluna;
+                        break;
+                    }
+                }
+            }
+            
+            log(`Coluna de cliente encontrada: ${colunaCliente || 'Nenhuma'}`);
+            log(`Coluna de data encontrada: ${colunaData || 'Nenhuma'}`);
+            
+            if (!colunaCliente || !colunaData) {
+                throw new Error('Não foi possível identificar as colunas necessárias na planilha de vendas.');
+            }
+            
+            // Processar vendas
+            vendas.forEach(venda => {
+                const cliente = venda[colunaCliente];
+                if (!cliente) return;
+                
+                if (!vendasPorCliente[cliente]) {
+                    vendasPorCliente[cliente] = [];
+                }
+                vendasPorCliente[cliente].push(venda);
+            });
+            
+            // Encontrar coluna de nome nos clientes
+            const possiveisColunasNome = ['Nome', 'NOME', 'nome', 'Cliente', 'CLIENTE', 'cliente', 'Name', 'name'];
+            let colunaNome = null;
+            
+            if (clientes.length > 0) {
+                const primeiroCliente = clientes[0];
+                
+                for (const coluna of possiveisColunasNome) {
+                    if (primeiroCliente[coluna] !== undefined) {
+                        colunaNome = coluna;
+                        break;
+                    }
+                }
+            }
+            
+            log(`Coluna de nome encontrada: ${colunaNome || 'Nenhuma'}`);
+            
+            if (!colunaNome) {
+                throw new Error('Não foi possível identificar a coluna de nome na planilha de clientes.');
+            }
+            
+            // Processar clientes
+            const clientesProcessados = [];
+            
+            clientes.forEach(cliente => {
+                const nome = cliente[colunaNome];
+                if (!nome) return;
+                
+                const vendasCliente = vendasPorCliente[nome] || [];
+                
+                // Encontrar a última venda
+                let ultimaData = null;
+                
+                vendasCliente.forEach(venda => {
+                    const dataVenda = venda[colunaData];
+                    if (!dataVenda) return;
+                    
+                    let dataObj;
+                    try {
+                        // Tentar converter para data
+                        if (dataVenda instanceof Date) {
+                            dataObj = dataVenda;
+                        } else if (typeof dataVenda === 'string') {
+                            // Tentar diferentes formatos de data
+                            const parts = dataVenda.split('/');
+                            if (parts.length === 3) {
+                                // Formato DD/MM/YYYY
+                                dataObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                            } else {
+                                dataObj = new Date(dataVenda);
+                            }
+                        } else {
+                            // Número (Excel armazena datas como números)
+                            dataObj = new Date(1900, 0, dataVenda - 1);
+                        }
+                        
+                        // Verificar se é uma data válida
+                        if (isNaN(dataObj.getTime())) return;
+                        
+                        // Atualizar última data se for mais recente
+                        if (!ultimaData || dataObj > ultimaData) {
+                            ultimaData = dataObj;
+                        }
+                    } catch (e) {
+                        console.error("Erro ao processar data:", dataVenda, e);
+                    }
+                });
+                
+                // Calcular dias de inatividade
+                let diasInativo = null;
+                let ultimaCompraFormatada = 'N/A';
+                
+                if (ultimaData) {
+                    try {
+                        diasInativo = Math.floor((new Date() - ultimaData) / (1000 * 60 * 60 * 24));
+                        ultimaCompraFormatada = ultimaData.toLocaleDateString('pt-BR');
+                    } catch (e) {
+                        console.error("Erro ao calcular dias de inatividade:", e);
+                    }
+                }
+                
+                // Determinar status
+                let status = 'Sem compras';
+                if (diasInativo !== null) {
+                    if (diasInativo <= 60) status = 'Ativo';
+                    else if (diasInativo <= 180) status = 'Em risco';
+                    else status = 'Inativo';
+                }
+                
+                // Adicionar cliente processado
+                clientesProcessados.push({
+                    nome: nome,
+                    ultimaCompra: ultimaCompraFormatada,
+                    diasInativo: diasInativo,
+                    status: status
+                });
+            });
+            
+            return clientesProcessados;
+        }
+        
+        // Função para atualizar o dashboard
+        function atualizarDashboard(clientes) {
+            document.getElementById('total-clientes').textContent = clientes.length;
+            document.getElementById('clientes-ativos').textContent = clientes.filter(c => c.status === 'Ativo').length;
+            document.getElementById('clientes-risco').textContent = clientes.filter(c => c.status === 'Em risco').length;
+            document.getElementById('clientes-inativos').textContent = clientes.filter(c => c.status === 'Inativo').length;
+        }
+        
+        // Função para atualizar a tabela
+        function atualizarTabela(clientes) {
+            const tbody = document.querySelector('#tabela-clientes tbody');
+            tbody.innerHTML = '';
+            
+            if (clientes.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.style.textAlign = 'center';
+                cell.textContent = 'Nenhum dado disponível';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+                return;
+            }
+            
+            clientes.forEach(cliente => {
+                const row = document.createElement('tr');
+                
+                // Adicionar classe baseada no status
+                if (cliente.status === 'Ativo') {
+                    row.className = 'status-ativo';
+                } else if (cliente.status === 'Em risco') {
+                    row.className = 'status-risco';
+                } else if (cliente.status === 'Inativo') {
+                    row.className = 'status-inativo';
+                }
+                
+                // Nome
+                const nomeCell = document.createElement('td');
+                nomeCell.textContent = cliente.nome;
+                row.appendChild(nomeCell);
+                
+                // Última compra
+                const ultimaCompraCell = document.createElement('td');
+                ultimaCompraCell.textContent = cliente.ultimaCompra;
+                row.appendChild(ultimaCompraCell);
+                
+                // Dias inativos
+                const diasInativoCell = document.createElement('td');
+                diasInativoCell.textContent = cliente.diasInativo === null ? 'N/A' : cliente.diasInativo;
+                row.appendChild(diasInativoCell);
+                
+                // Status
+                const statusCell = document.createElement('td');
+                statusCell.textContent = cliente.status;
+                row.appendChild(statusCell);
+                
+                tbody.appendChild(row);
+            });
+        }
+        
+        // Carregar dados do localStorage ao iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            const storedData = localStorage.getItem('crm_data_basico');
+            if (storedData) {
+                try {
+                    const clientes = JSON.parse(storedData);
+                    atualizarDashboard(clientes);
+                    atualizarTabela(clientes);
+                    log(`Dados carregados do localStorage: ${clientes.length} clientes`);
+                } catch (error) {
+                    log(`Erro ao carregar dados do localStorage: ${error.message}`);
+                }
+            }
+        });
+    </script>
+    
+    <!-- Carregar SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+</body>
+</html>

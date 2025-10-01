@@ -858,6 +858,7 @@
             }
 
             function log(message, type = 'info') {
+                console.log(`${type}: ${message}`);
                 const logEntry = document.createElement('p');
                 logEntry.className = `log-${type}`;
                 logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
@@ -906,45 +907,80 @@
                 updateProgress(0);
                 
                 log('Iniciando o processamento dos arquivos...');
-                updateProgress(10);
+                updateProgress(5);
 
                 try {
                     // Ler os arquivos
                     log('Lendo arquivo de vendas...');
-                    const vendasData = await readFile(vendasFileInput.files[0]);
-                    updateProgress(30);
+                    const vendasFile = vendasFileInput.files[0];
+                    log(`Nome do arquivo de vendas: ${vendasFile.name}, Tamanho: ${vendasFile.size} bytes`);
                     
-                    log('Lendo arquivo de clientes...');
-                    const pessoasData = await readFile(clientesFileInput.files[0]);
-                    updateProgress(50);
-
-                    log('Arquivos lidos com sucesso. Processando dados...', 'success');
-                    updateProgress(60);
-
-                    // Processar os dados
-                    log('Calculando dias de inatividade para cada cliente...');
-                    const clientes = processarDados(vendasData, pessoasData);
-                    updateProgress(80);
-
-                    log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
-                    updateProgress(90);
-
-                    // Salvar no localStorage
-                    localStorage.setItem('crm_data', JSON.stringify(clientes));
-                    log('Dados salvos no armazenamento local.', 'success');
-
-                    // Atualizar o dashboard
-                    atualizarDashboard(clientes);
-                    atualizarTabelaClientes(clientes);
-                    log('Dashboard e tabelas atualizadas.', 'success');
-                    updateProgress(100);
-
-                    // Mostrar o botão de próximo
-                    document.getElementById("next-step3").style.display = "block";
+                    // Usar setTimeout para evitar o travamento da interface
+                    setTimeout(async () => {
+                        try {
+                            updateProgress(10);
+                            const vendasData = await readFile(vendasFile);
+                            log(`Arquivo de vendas lido com sucesso. ${vendasData.length} registros encontrados.`, 'success');
+                            updateProgress(40);
+                            
+                            log('Lendo arquivo de clientes...');
+                            const clientesFile = clientesFileInput.files[0];
+                            log(`Nome do arquivo de clientes: ${clientesFile.name}, Tamanho: ${clientesFile.size} bytes`);
+                            
+                            setTimeout(async () => {
+                                try {
+                                    updateProgress(50);
+                                    const clientesData = await readFile(clientesFile);
+                                    log(`Arquivo de clientes lido com sucesso. ${clientesData.length} registros encontrados.`, 'success');
+                                    updateProgress(70);
+                                    
+                                    // Processar os dados em um timeout separado
+                                    setTimeout(() => {
+                                        try {
+                                            log('Processando dados...');
+                                            updateProgress(80);
+                                            
+                                            // Criar clientes processados
+                                            const clientes = processarDadosSimplificado(vendasData, clientesData);
+                                            log(`Processamento concluído. ${clientes.length} clientes encontrados.`, 'success');
+                                            updateProgress(90);
+                                            
+                                            // Salvar no localStorage
+                                            localStorage.setItem('crm_data', JSON.stringify(clientes));
+                                            log('Dados salvos no armazenamento local.', 'success');
+                                            
+                                            // Atualizar o dashboard
+                                            atualizarDashboard(clientes);
+                                            atualizarTabelaClientes(clientes);
+                                            log('Dashboard e tabelas atualizadas.', 'success');
+                                            updateProgress(100);
+                                            
+                                            // Mostrar o botão de próximo
+                                            document.getElementById("next-step3").style.display = "block";
+                                            
+                                            // Reabilitar o botão
+                                            processButton.disabled = false;
+                                        } catch (error) {
+                                            log(`Erro ao processar dados: ${error.message}`, 'error');
+                                            console.error(error);
+                                            processButton.disabled = false;
+                                        }
+                                    }, 100);
+                                    
+                                } catch (error) {
+                                    log(`Erro ao ler arquivo de clientes: ${error.message}`, 'error');
+                                    console.error(error);
+                                    processButton.disabled = false;
+                                }
+                            }, 100);
+                            
+                        } catch (error) {
+                            log(`Erro ao ler arquivo de vendas: ${error.message}`, 'error');
+                            console.error(error);
+                            processButton.disabled = false;
+                        }
+                    }, 100);
                     
-                    // Reabilitar o botão
-                    processButton.disabled = false;
-
                 } catch (error) {
                     log(`Ocorreu um erro: ${error.message}`, 'error');
                     console.error(error);
@@ -955,41 +991,53 @@
 
         function readFile(file) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const json = XLSX.utils.sheet_to_json(worksheet);
-                        resolve(json);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                reader.onerror = (error) => reject(error);
-                reader.readAsArrayBuffer(file);
+                try {
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const json = XLSX.utils.sheet_to_json(worksheet);
+                            resolve(json);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                } catch (error) {
+                    reject(error);
+                }
             });
         }
 
         function getHeaders(file) {
             return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
-                        resolve(headers);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                reader.onerror = (error) => reject(error);
-                reader.readAsArrayBuffer(file);
+                try {
+                    const reader = new FileReader();
+                    
+                    reader.onload = (e) => {
+                        try {
+                            const data = new Uint8Array(e.target.result);
+                            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                            const sheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[sheetName];
+                            const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0];
+                            resolve(headers);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    
+                    reader.onerror = (error) => reject(error);
+                    reader.readAsArrayBuffer(file);
+                } catch (error) {
+                    reject(error);
+                }
             });
         }
 
@@ -1009,13 +1057,10 @@
             });
         }
 
-        function processarDados(vendas, pessoas) {
-            console.log("Processando dados...");
-            console.log("Vendas:", vendas.length);
-            console.log("Pessoas:", pessoas.length);
+        // Versão simplificada do processamento para evitar travamentos
+        function processarDadosSimplificado(vendas, pessoas) {
+            console.log("Processando dados simplificado...");
             
-            const vendasPorCliente = {};
-
             const clienteField = document.getElementById("map-vendas-cliente").value;
             const dataField = document.getElementById("map-vendas-data").value;
             const nomeField = document.getElementById("map-clientes-nome").value;
@@ -1023,82 +1068,89 @@
             const telefone1Field = document.getElementById("map-clientes-telefone1").value;
             const telefone2Field = document.getElementById("map-clientes-telefone2").value;
             const telefone3Field = document.getElementById("map-clientes-telefone3").value;
-
-            console.log("Campos mapeados:", {
-                clienteField, dataField, nomeField, cpfField, 
-                telefone1Field, telefone2Field, telefone3Field
-            });
-
-            // Agrupar vendas por cliente
-            vendas.forEach(venda => {
-                const clienteNome = venda[clienteField];
-                if (!clienteNome) return;
-
-                if (!vendasPorCliente[clienteNome]) {
-                    vendasPorCliente[clienteNome] = [];
-                }
-                vendasPorCliente[clienteNome].push(venda);
-            });
-
-            console.log("Clientes com vendas:", Object.keys(vendasPorCliente).length);
-
-            // Processar cada cliente
-            const clientes = pessoas.map(pessoa => {
-                const nome = pessoa[nomeField];
-                if (!nome) {
-                    console.log("Cliente sem nome:", pessoa);
-                    return null;
-                }
-                
-                const vendasCliente = vendasPorCliente[nome] || [];
-                
-                // Ordenar vendas por data (mais recente primeiro)
-                const vendasOrdenadas = vendasCliente.sort((a, b) => {
-                    let dateA, dateB;
+            
+            // Criar um mapa de vendas por cliente para acesso mais rápido
+            const vendasPorCliente = {};
+            
+            // Processar vendas em lotes para evitar travamento
+            const batchSize = 100;
+            for (let i = 0; i < vendas.length; i += batchSize) {
+                const batch = vendas.slice(i, i + batchSize);
+                batch.forEach(venda => {
+                    const clienteNome = venda[clienteField];
+                    if (!clienteNome) return;
                     
-                    try {
-                        dateA = a[dataField] instanceof Date ? a[dataField] : new Date(a[dataField]);
-                    } catch (e) {
-                        console.error("Erro ao converter data A:", a[dataField], e);
-                        dateA = new Date(0); // Data mínima em caso de erro
+                    if (!vendasPorCliente[clienteNome]) {
+                        vendasPorCliente[clienteNome] = [];
                     }
-                    
-                    try {
-                        dateB = b[dataField] instanceof Date ? b[dataField] : new Date(b[dataField]);
-                    } catch (e) {
-                        console.error("Erro ao converter data B:", b[dataField], e);
-                        dateB = new Date(0); // Data mínima em caso de erro
-                    }
-                    
-                    return dateB - dateA;
+                    vendasPorCliente[clienteNome].push(venda);
                 });
-                
-                const ultimaVenda = vendasOrdenadas.length > 0 ? vendasOrdenadas[0] : null;
-                let ultimaCompra = null;
-                let diasInativo = null;
-                
-                if (ultimaVenda) {
-                    try {
-                        ultimaCompra = ultimaVenda[dataField] instanceof Date ? 
-                            ultimaVenda[dataField] : new Date(ultimaVenda[dataField]);
+            }
+            
+            // Processar clientes
+            const clientes = [];
+            
+            // Processar clientes em lotes para evitar travamento
+            for (let i = 0; i < pessoas.length; i += batchSize) {
+                const batch = pessoas.slice(i, i + batchSize);
+                batch.forEach(pessoa => {
+                    const nome = pessoa[nomeField];
+                    if (!nome) return;
+                    
+                    const vendasCliente = vendasPorCliente[nome] || [];
+                    
+                    // Encontrar a última venda
+                    let ultimaVenda = null;
+                    let ultimaData = null;
+                    
+                    for (const venda of vendasCliente) {
+                        const dataVenda = venda[dataField];
+                        if (!dataVenda) continue;
                         
-                        diasInativo = Math.floor((new Date() - ultimaCompra) / (1000 * 60 * 60 * 24));
-                    } catch (e) {
-                        console.error("Erro ao processar última compra:", ultimaVenda[dataField], e);
+                        let dataObj;
+                        try {
+                            // Tentar converter para data
+                            dataObj = dataVenda instanceof Date ? dataVenda : new Date(dataVenda);
+                            
+                            // Verificar se é uma data válida
+                            if (isNaN(dataObj.getTime())) continue;
+                            
+                            // Atualizar última venda se for mais recente
+                            if (!ultimaData || dataObj > ultimaData) {
+                                ultimaData = dataObj;
+                                ultimaVenda = venda;
+                            }
+                        } catch (e) {
+                            console.error("Erro ao processar data:", dataVenda);
+                            continue;
+                        }
                     }
-                }
-
-                return {
-                    nome: nome,
-                    cpf: pessoa[cpfField],
-                    telefone: pessoa[telefone1Field] || pessoa[telefone2Field] || pessoa[telefone3Field],
-                    ultimaCompra: ultimaCompra ? ultimaCompra.toLocaleDateString('pt-BR') : 'N/A',
-                    diasInativo: diasInativo,
-                    status: getStatus(diasInativo)
-                };
-            }).filter(cliente => cliente !== null);
-
-            console.log("Clientes processados:", clientes.length);
+                    
+                    // Calcular dias de inatividade
+                    let diasInativo = null;
+                    let ultimaCompraFormatada = 'N/A';
+                    
+                    if (ultimaData) {
+                        try {
+                            diasInativo = Math.floor((new Date() - ultimaData) / (1000 * 60 * 60 * 24));
+                            ultimaCompraFormatada = ultimaData.toLocaleDateString('pt-BR');
+                        } catch (e) {
+                            console.error("Erro ao calcular dias de inatividade:", e);
+                        }
+                    }
+                    
+                    // Criar objeto cliente
+                    clientes.push({
+                        nome: nome,
+                        cpf: pessoa[cpfField],
+                        telefone: pessoa[telefone1Field] || pessoa[telefone2Field] || pessoa[telefone3Field],
+                        ultimaCompra: ultimaCompraFormatada,
+                        diasInativo: diasInativo,
+                        status: getStatus(diasInativo)
+                    });
+                });
+            }
+            
             return clientes;
         }
 

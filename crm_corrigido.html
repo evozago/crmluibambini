@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Lui Bambini - Análise de Vendas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            font-weight: bold;
+        }
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .stats-card h3 {
+            margin-bottom: 0;
+            font-size: 28px;
+        }
+        .stats-card p {
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background-color: #f8f9fa;
+        }
+        #log {
+            height: 200px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            font-family: monospace;
+            margin-top: 20px;
+        }
+        .log-info {
+            color: #0d6efd;
+        }
+        .log-success {
+            color: #198754;
+        }
+        .log-warning {
+            color: #ffc107;
+        }
+        .log-error {
+            color: #dc3545;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .status-ativo {
+            background-color: #d1e7dd;
+        }
+        .status-risco {
+            background-color: #fff3cd;
+        }
+        .status-inativo {
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">CRM Lui Bambini - Análise de Vendas</h1>
+        
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="importacao-tab" data-bs-toggle="tab" data-bs-target="#importacao" type="button" role="tab" aria-controls="importacao" aria-selected="true">Importação</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">Dashboard</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab" aria-controls="clientes" aria-selected="false">Clientes</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="vendas-tab" data-bs-toggle="tab" data-bs-target="#vendas" type="button" role="tab" aria-controls="vendas" aria-selected="false">Vendas</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Importação Tab -->
+            <div class="tab-pane fade show active" id="importacao" role="tabpanel" aria-labelledby="importacao-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Importação de Planilhas</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Planilha de Vendas</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="upload-area" id="upload-vendas">
+                                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="50" height="50" alt="Upload">
+                                            <h4 class="mt-3">Arraste e solte a planilha de vendas aqui</h4>
+                                            <p>ou clique para selecionar o arquivo</p>
+                                            <input type="file" id="file-vendas" style="display: none;" accept=".xlsx,.xls">
+                                        </div>
+                                        <div id="vendas-file-info" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5>Planilha de Clientes</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="upload-area" id="upload-clientes">
+                                            <img src="https://cdn-icons-png.flaticon.com/512/337/337946.png" width="50" height="50" alt="Upload">
+                                            <h4 class="mt-3">Arraste e solte a planilha de clientes aqui</h4>
+                                            <p>ou clique para selecionar o arquivo</p>
+                                            <input type="file" id="file-clientes" style="display: none;" accept=".xlsx,.xls">
+                                        </div>
+                                        <div id="clientes-file-info" class="mt-3"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mt-4">
+                            <div class="card-header">
+                                <h5>Mapeamento de Colunas</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Colunas da Planilha de Vendas</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label">Data:</label>
+                                            <input type="text" class="form-control" id="coluna-data" value="Data" placeholder="Nome da coluna de data">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Movimentação:</label>
+                                            <input type="text" class="form-control" id="coluna-movimentacao" value="Movimentação" placeholder="Nome da coluna de movimentação">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Quantidade:</label>
+                                            <input type="text" class="form-control" id="coluna-quantidade" value="Quantidade" placeholder="Nome da coluna de quantidade">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Total:</label>
+                                            <input type="text" class="form-control" id="coluna-total" value="Total" placeholder="Nome da coluna de total">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Mais Colunas da Planilha de Vendas</h6>
+                                        <div class="mb-3">
+                                            <label class="form-label">Cliente:</label>
+                                            <input type="text" class="form-control" id="coluna-cliente" value="Cliente" placeholder="Nome da coluna de cliente">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Vendedor:</label>
+                                            <input type="text" class="form-control" id="coluna-vendedor" value="Vendedor" placeholder="Nome da coluna de vendedor">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Telefone:</label>
+                                            <input type="text" class="form-control" id="coluna-telefone" value="Telefone" placeholder="Nome da coluna de telefone">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Custo:</label>
+                                            <input type="text" class="form-control" id="coluna-custo" value="Custo" placeholder="Nome da coluna de custo">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Lucro:</label>
+                                            <input type="text" class="form-control" id="coluna-lucro" value="Lucro" placeholder="Nome da coluna de lucro">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button id="processar" class="btn btn-primary">Processar Dados</button>
+                        </div>
+                        
+                        <div id="log"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <h3 id="total-clientes">0</h3>
+                            <p>Total de Clientes</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <h3 id="total-vendas">0</h3>
+                            <p>Total de Vendas</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <h3 id="valor-total">R$ 0,00</h3>
+                            <p>Valor Total</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card stats-card">
+                            <h3 id="lucro-total">R$ 0,00</h3>
+                            <p>Lucro Total</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Vendas por Período</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="vendasChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Top 5 Clientes</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Cliente</th>
+                                                <th>Total de Compras</th>
+                                                <th>Valor Total</th>
+                                                <th>Última Compra</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top-clientes">
+                                            <tr>
+                                                <td colspan="4" class="text-center">Nenhum dado disponível</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Top 5 Vendedores</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Vendedor</th>
+                                                <th>Total de Vendas</th>
+                                                <th>Valor Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="top-vendedores">
+                                            <tr>
+                                                <td colspan="3" class="text-center">Nenhum dado disponível</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Lucratividade Mensal</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="lucroChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clientes Tab -->
+            <div class="tab-pane fade" id="clientes" role="tabpanel" aria-labelledby="clientes-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Lista de Clientes</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="busca-cliente" placeholder="Buscar cliente...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Telefone</th>
+                                        <th>Total de Compras</th>
+                                        <th>Valor Total</th>
+                                        <th>Última Compra</th>
+                                        <th>Dias Inativos</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-clientes">
+                                    <tr>
+                                        <td colspan="7" class="text-center">Nenhum dado disponível</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Vendas Tab -->
+            <div class="tab-pane fade" id="vendas" role="tabpanel" aria-labelledby="vendas-tab">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>Histórico de Vendas</h5>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="busca-venda" placeholder="Buscar venda...">
+                                    <button class="btn btn-outline-secondary" type="button" id="filtrar-vendas">Filtrar</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Cliente</th>
+                                        <th>Movimentação</th>
+                                        <th>Quantidade</th>
+                                        <th>Total</th>
+                                        <th>Custo</th>
+                                        <th>Lucro</th>
+                                        <th>Vendedor</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lista-vendas">
+                                    <tr>
+                                        <td colspan="8" class="text-center">Nenhum dado disponível</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.19.3/package/dist/xlsx.full.min.js"></script>
+    <script>
+        // Variáveis globais
+        let vendasData = [];
+        let clientesData = [];
+        let clientesProcessados = [];
+        let vendasProcessadas = [];
+        let vendasChart = null;
+        let lucroChart = null;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicializar manipuladores de upload
+            inicializarUploadHandlers();
+            
+            // Inicializar botão de processamento
+            document.getElementById('processar').addEventListener('click', processarDados);
+            
+            // Carregar dados do localStorage se existirem
+            carregarDadosLocais();
+        });
+        
+        // Função para inicializar os manipuladores de upload
+        function inicializarUploadHandlers() {
+            ['vendas', 'clientes'].forEach(type => {
+                const uploadArea = document.getElementById(`upload-${type}`);
+                const fileInput = document.getElementById(`file-${type}`);
+                const fileInfo = document.getElementById(`${type}-file-info`);
+                
+                if (!uploadArea || !fileInput || !fileInfo) {
+                    console.error(`Elementos de upload para ${type} não encontrados`);
+                    return;
+                }
+
+                uploadArea.addEventListener('click', () => {
+                    fileInput.click();
+                });
+
+                fileInput.addEventListener('change', () => {
+                    if (fileInput.files.length > 0) {
+                        fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
+                    }
+                });
+
+                uploadArea.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('active');
+                });
+
+                uploadArea.addEventListener('dragleave', () => {
+                    uploadArea.classList.remove('active');
+                });
+
+                uploadArea.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('active');
+                    fileInput.files = e.dataTransfer.files;
+                    if (fileInput.files.length > 0) {
+                        fileInfo.innerHTML = `<p><strong>Arquivo selecionado:</strong> ${fileInput.files[0].name}</p>`;
+                    }
+                });
+            });
+        }
+        
+        // Função para adicionar mensagens ao log
+        function log(message, type = 'info') {
+            const logElement = document.getElementById('log');
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-${type}`;
+            logEntry.textContent = `[${now}] ${message}`;
+            logElement.appendChild(logEntry);
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(`[${now}] ${message}`);
+        }
+        
+        // Função para ler um arquivo Excel
+        function readExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    try {
+                        const data = e.target.result;
+                        const workbook = XLSX.read(data, {type: 'binary'});
+                        const firstSheet = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheet];
+                        const json = XLSX.utils.sheet_to_json(worksheet);
+                        resolve(json);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                reader.onerror = function(error) {
+                    reject(error);
+                };
+                
+                reader.readAsBinaryString(file);
+            });
+        }
+        
+        // Função para processar os dados
+        async function processarDados() {
+            const vendasFile = document.getElementById('file-vendas').files[0];
+            const clientesFile = document.getElementById('file-clientes').files[0];
+            
+            if (!vendasFile) {
+                alert('Por favor, selecione o arquivo de vendas.');
+                return;
+            }
+            
+            log('Iniciando processamento...');
+            
+            try {
+                // Obter os nomes das colunas
+                const colunaData = document.getElementById('coluna-data').value;
+                const colunaMovimentacao = document.getElementById('coluna-movimentacao').value;
+                const colunaQuantidade = document.getElementById('coluna-quantidade').value;
+                const colunaTotal = document.getElementById('coluna-total').value;
+                const colunaCliente = document.getElementById('coluna-cliente').value;
+                const colunaVendedor = document.getElementById('coluna-vendedor').value;
+                const colunaTelefone = document.getElementById('coluna-telefone').value;
+                const colunaCusto = document.getElementById('coluna-custo').value;
+                const colunaLucro = document.getElementById('coluna-lucro').value;
+                
+                // Ler o arquivo de vendas
+                log('Lendo arquivo de vendas...');
+                vendasData = await readExcel(vendasFile);
+                log(`Arquivo de vendas lido com sucesso. ${vendasData.length} registros encontrados.`);
+                
+                // Ler o arquivo de clientes se disponível
+                if (clientesFile) {
+                    log('Lendo arquivo de clientes...');
+                    clientesData = await readExcel(clientesFile);
+                    log(`Arquivo de clientes lido com sucesso. ${clientesData.length} registros encontrados.`);
+                } else {
+                    log('Arquivo de clientes não selecionado. Processando apenas com dados de vendas.', 'warning');
+                    clientesData = [];
+                }
+                
+                // Processar os dados
+                log('Processando dados...');
+                
+                // Processar vendas
+                vendasProcessadas = processarVendas(vendasData, {
+                    colunaData,
+                    colunaMovimentacao,
+                    colunaQuantidade,
+                    colunaTotal,
+                    colunaCliente,
+                    colunaVendedor,
+                    colunaTelefone,
+                    colunaCusto,
+                    colunaLucro
+                });
+                
+                // Processar clientes
+                clientesProcessados = processarClientes(vendasProcessadas, clientesData);
+                
+                // Salvar no localStorage
+                localStorage.setItem('crm_vendas_data', JSON.stringify(vendasProcessadas));
+                localStorage.setItem('crm_clientes_data', JSON.stringify(clientesProcessados));
+                log('Dados salvos no armazenamento local.');
+                
+                // Atualizar a interface
+                atualizarDashboard();
+                atualizarTabelaClientes();
+                atualizarTabelaVendas();
+                
+                // Mudar para a aba de dashboard
+                document.getElementById('dashboard-tab').click();
+                
+                log('Processamento concluído com sucesso!', 'success');
+                
+            } catch (error) {
+                log(`Erro ao processar dados: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Função para processar vendas
+        function processarVendas(vendas, colunas) {
+            const vendasProcessadas = [];
+            
+            vendas.forEach(venda => {
+                // Verificar se tem as colunas necessárias
+                if (venda[colunas.colunaData] === undefined || venda[colunas.colunaCliente] === undefined) {
+                    return;
+                }
+                
+                // Converter data
+                let dataVenda;
+                try {
+                    const dataOriginal = venda[colunas.colunaData];
+                    if (dataOriginal instanceof Date) {
+                        dataVenda = dataOriginal;
+                    } else if (typeof dataOriginal === 'string') {
+                        // Tentar diferentes formatos de data
+                        const parts = dataOriginal.split('/');
+                        if (parts.length === 3) {
+                            // Formato DD/MM/YYYY
+                            dataVenda = new Date(parts[2], parts[1] - 1, parts[0]);
+                        } else {
+                            dataVenda = new Date(dataOriginal);
+                        }
+                    } else {
+                        // Número (Excel armazena datas como números)
+                        dataVenda = new Date(1900, 0, dataOriginal - 1);
+                    }
+                    
+                    // Verificar se é uma data válida
+                    if (isNaN(dataVenda.getTime())) {
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Erro ao processar data:", venda[colunas.colunaData], e);
+                    return;
+                }
+                
+                // Converter valores numéricos
+                const quantidade = parseFloat(venda[colunas.colunaQuantidade]) || 0;
+                const total = parseFloat(venda[colunas.colunaTotal]) || 0;
+                const custo = parseFloat(venda[colunas.colunaCusto]) || 0;
+                const lucro = parseFloat(venda[colunas.colunaLucro]) || (total - custo);
+                
+                // Adicionar venda processada
+                vendasProcessadas.push({
+                    data: dataVenda,
+                    dataFormatada: dataVenda.toLocaleDateString('pt-BR'),
+                    movimentacao: venda[colunas.colunaMovimentacao] || '',
+                    quantidade: quantidade,
+                    total: total,
+                    cliente: venda[colunas.colunaCliente] || '',
+                    vendedor: venda[colunas.colunaVendedor] || '',
+                    telefone: venda[colunas.colunaTelefone] || '',
+                    custo: custo,
+                    lucro: lucro
+                });
+            });
+            
+            // Ordenar por data (mais recente primeiro)
+            vendasProcessadas.sort((a, b) => b.data - a.data);
+            
+            return vendasProcessadas;
+        }
+        
+        // Função para processar clientes
+        function processarClientes(vendas, clientes) {
+            // Criar um mapa de clientes
+            const clientesMap = new Map();
+            
+            // Processar vendas para obter informações dos clientes
+            vendas.forEach(venda => {
+                const nomeCliente = venda.cliente;
+                if (!nomeCliente) return;
+                
+                if (!clientesMap.has(nomeCliente)) {
+                    clientesMap.set(nomeCliente, {
+                        nome: nomeCliente,
+                        telefone: venda.telefone || '',
+                        totalCompras: 0,
+                        valorTotal: 0,
+                        ultimaCompra: null,
+                        diasInativo: null
+                    });
+                }
+                
+                const cliente = clientesMap.get(nomeCliente);
+                cliente.totalCompras++;
+                cliente.valorTotal += venda.total;
+                
+                // Atualizar última compra se for mais recente
+                if (!cliente.ultimaCompra || venda.data > cliente.ultimaCompra) {
+                    cliente.ultimaCompra = venda.data;
+                    cliente.ultimaCompraFormatada = venda.dataFormatada;
+                }
+            });
+            
+            // Calcular dias de inatividade
+            const hoje = new Date();
+            const clientesProcessados = [];
+            
+            clientesMap.forEach(cliente => {
+                if (cliente.ultimaCompra) {
+                    cliente.diasInativo = Math.floor((hoje - cliente.ultimaCompra) / (1000 * 60 * 60 * 24));
+                    
+                    // Determinar status
+                    if (cliente.diasInativo <= 60) {
+                        cliente.status = 'Ativo';
+                        cliente.statusClass = 'status-ativo';
+                    } else if (cliente.diasInativo <= 180) {
+                        cliente.status = 'Em risco';
+                        cliente.statusClass = 'status-risco';
+                    } else {
+                        cliente.status = 'Inativo';
+                        cliente.statusClass = 'status-inativo';
+                    }
+                } else {
+                    cliente.diasInativo = null;
+                    cliente.status = 'Sem compras';
+                    cliente.statusClass = '';
+                }
+                
+                clientesProcessados.push(cliente);
+            });
+            
+            // Ordenar por valor total (maior primeiro)
+            clientesProcessados.sort((a, b) => b.valorTotal - a.valorTotal);
+            
+            return clientesProcessados;
+        }
+        
+        // Função para atualizar o dashboard
+        function atualizarDashboard() {
+            // Atualizar estatísticas
+            document.getElementById('total-clientes').textContent = clientesProcessados.length;
+            document.getElementById('total-vendas').textContent = vendasProcessadas.length;
+            
+            const valorTotal = vendasProcessadas.reduce((sum, venda) => sum + venda.total, 0);
+            const lucroTotal = vendasProcessadas.reduce((sum, venda) => sum + venda.lucro, 0);
+            
+            document.getElementById('valor-total').textContent = formatarMoeda(valorTotal);
+            document.getElementById('lucro-total').textContent = formatarMoeda(lucroTotal);
+            
+            // Atualizar tabela de top clientes
+            const topClientes = clientesProcessados.slice(0, 5);
+            const tbodyTopClientes = document.getElementById('top-clientes');
+            tbodyTopClientes.innerHTML = '';
+            
+            if (topClientes.length > 0) {
+                topClientes.forEach(cliente => {
+                    const row = document.createElement('tr');
+                    
+                    const nomeCell = document.createElement('td');
+                    nomeCell.textContent = cliente.nome;
+                    row.appendChild(nomeCell);
+                    
+                    const comprasCell = document.createElement('td');
+                    comprasCell.textContent = cliente.totalCompras;
+                    row.appendChild(comprasCell);
+                    
+                    const valorCell = document.createElement('td');
+                    valorCell.textContent = formatarMoeda(cliente.valorTotal);
+                    row.appendChild(valorCell);
+                    
+                    const ultimaCompraCell = document.createElement('td');
+                    ultimaCompraCell.textContent = cliente.ultimaCompraFormatada || 'N/A';
+                    row.appendChild(ultimaCompraCell);
+                    
+                    tbodyTopClientes.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 4;
+                cell.textContent = 'Nenhum dado disponível';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tbodyTopClientes.appendChild(row);
+            }
+            
+            // Atualizar tabela de top vendedores
+            const vendedoresMap = new Map();
+            vendasProcessadas.forEach(venda => {
+                if (!venda.vendedor) return;
+                
+                if (!vendedoresMap.has(venda.vendedor)) {
+                    vendedoresMap.set(venda.vendedor, {
+                        nome: venda.vendedor,
+                        totalVendas: 0,
+                        valorTotal: 0
+                    });
+                }
+                
+                const vendedor = vendedoresMap.get(venda.vendedor);
+                vendedor.totalVendas++;
+                vendedor.valorTotal += venda.total;
+            });
+            
+            const vendedores = Array.from(vendedoresMap.values());
+            vendedores.sort((a, b) => b.valorTotal - a.valorTotal);
+            
+            const topVendedores = vendedores.slice(0, 5);
+            const tbodyTopVendedores = document.getElementById('top-vendedores');
+            tbodyTopVendedores.innerHTML = '';
+            
+            if (topVendedores.length > 0) {
+                topVendedores.forEach(vendedor => {
+                    const row = document.createElement('tr');
+                    
+                    const nomeCell = document.createElement('td');
+                    nomeCell.textContent = vendedor.nome;
+                    row.appendChild(nomeCell);
+                    
+                    const vendasCell = document.createElement('td');
+                    vendasCell.textContent = vendedor.totalVendas;
+                    row.appendChild(vendasCell);
+                    
+                    const valorCell = document.createElement('td');
+                    valorCell.textContent = formatarMoeda(vendedor.valorTotal);
+                    row.appendChild(valorCell);
+                    
+                    tbodyTopVendedores.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 3;
+                cell.textContent = 'Nenhum dado disponível';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tbodyTopVendedores.appendChild(row);
+            }
+            
+            // Atualizar gráficos
+            atualizarGraficos();
+        }
+        
+        // Função para atualizar os gráficos
+        function atualizarGraficos() {
+            // Gráfico de vendas por período
+            const vendasPorMes = {};
+            
+            vendasProcessadas.forEach(venda => {
+                const mes = `${venda.data.getMonth() + 1}/${venda.data.getFullYear()}`;
+                if (!vendasPorMes[mes]) {
+                    vendasPorMes[mes] = {
+                        total: 0,
+                        quantidade: 0
+                    };
+                }
+                vendasPorMes[mes].total += venda.total;
+                vendasPorMes[mes].quantidade++;
+            });
+            
+            const meses = Object.keys(vendasPorMes).sort((a, b) => {
+                const [mesA, anoA] = a.split('/');
+                const [mesB, anoB] = b.split('/');
+                return new Date(anoA, mesA - 1) - new Date(anoB, mesB - 1);
+            });
+            
+            const totaisPorMes = meses.map(mes => vendasPorMes[mes].total);
+            const quantidadesPorMes = meses.map(mes => vendasPorMes[mes].quantidade);
+            
+            const ctxVendas = document.getElementById('vendasChart');
+            if (ctxVendas) {
+                // Destruir o gráfico anterior se existir
+                if (vendasChart) {
+                    vendasChart.destroy();
+                }
+                
+                vendasChart = new Chart(ctxVendas, {
+                    type: 'bar',
+                    data: {
+                        labels: meses,
+                        datasets: [
+                            {
+                                label: 'Valor Total (R$)',
+                                data: totaisPorMes,
+                                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y'
+                            },
+                            {
+                                label: 'Quantidade de Vendas',
+                                data: quantidadesPorMes,
+                                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1,
+                                yAxisID: 'y1'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Valor Total (R$)'
+                                }
+                            },
+                            y1: {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                grid: {
+                                    drawOnChartArea: false
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Quantidade de Vendas'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Gráfico de lucratividade mensal
+            const lucroPorMes = {};
+            
+            vendasProcessadas.forEach(venda => {
+                const mes = `${venda.data.getMonth() + 1}/${venda.data.getFullYear()}`;
+                if (!lucroPorMes[mes]) {
+                    lucroPorMes[mes] = {
+                        lucro: 0,
+                        custo: 0,
+                        total: 0
+                    };
+                }
+                lucroPorMes[mes].lucro += venda.lucro;
+                lucroPorMes[mes].custo += venda.custo;
+                lucroPorMes[mes].total += venda.total;
+            });
+            
+            const lucrosPorMes = meses.map(mes => lucroPorMes[mes].lucro);
+            const custosPorMes = meses.map(mes => lucroPorMes[mes].custo);
+            
+            const ctxLucro = document.getElementById('lucroChart');
+            if (ctxLucro) {
+                // Destruir o gráfico anterior se existir
+                if (lucroChart) {
+                    lucroChart.destroy();
+                }
+                
+                lucroChart = new Chart(ctxLucro, {
+                    type: 'line',
+                    data: {
+                        labels: meses,
+                        datasets: [
+                            {
+                                label: 'Lucro (R$)',
+                                data: lucrosPorMes,
+                                backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            },
+                            {
+                                label: 'Custo (R$)',
+                                data: custosPorMes,
+                                backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                                borderColor: 'rgba(255, 159, 64, 1)',
+                                borderWidth: 2,
+                                fill: false
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Valor (R$)'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Função para atualizar a tabela de clientes
+        function atualizarTabelaClientes() {
+            const tbody = document.getElementById('lista-clientes');
+            tbody.innerHTML = '';
+            
+            if (clientesProcessados.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 7;
+                cell.textContent = 'Nenhum dado disponível';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+                return;
+            }
+            
+            clientesProcessados.forEach(cliente => {
+                const row = document.createElement('tr');
+                if (cliente.statusClass) {
+                    row.className = cliente.statusClass;
+                }
+                
+                // Nome
+                const nomeCell = document.createElement('td');
+                nomeCell.textContent = cliente.nome;
+                row.appendChild(nomeCell);
+                
+                // Telefone
+                const telefoneCell = document.createElement('td');
+                telefoneCell.textContent = cliente.telefone || 'N/A';
+                row.appendChild(telefoneCell);
+                
+                // Total de compras
+                const comprasCell = document.createElement('td');
+                comprasCell.textContent = cliente.totalCompras;
+                row.appendChild(comprasCell);
+                
+                // Valor total
+                const valorCell = document.createElement('td');
+                valorCell.textContent = formatarMoeda(cliente.valorTotal);
+                row.appendChild(valorCell);
+                
+                // Última compra
+                const ultimaCompraCell = document.createElement('td');
+                ultimaCompraCell.textContent = cliente.ultimaCompraFormatada || 'N/A';
+                row.appendChild(ultimaCompraCell);
+                
+                // Dias inativos
+                const diasInativoCell = document.createElement('td');
+                diasInativoCell.textContent = cliente.diasInativo === null ? 'N/A' : cliente.diasInativo;
+                row.appendChild(diasInativoCell);
+                
+                // Status
+                const statusCell = document.createElement('td');
+                statusCell.textContent = cliente.status;
+                row.appendChild(statusCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            // Adicionar busca
+            document.getElementById('busca-cliente').addEventListener('input', function(e) {
+                const termo = e.target.value.toLowerCase();
+                const linhas = tbody.querySelectorAll('tr');
+                
+                linhas.forEach(linha => {
+                    const nome = linha.cells[0].textContent.toLowerCase();
+                    if (nome.includes(termo)) {
+                        linha.style.display = '';
+                    } else {
+                        linha.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Função para atualizar a tabela de vendas
+        function atualizarTabelaVendas() {
+            const tbody = document.getElementById('lista-vendas');
+            tbody.innerHTML = '';
+            
+            if (vendasProcessadas.length === 0) {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                cell.colSpan = 8;
+                cell.textContent = 'Nenhum dado disponível';
+                cell.className = 'text-center';
+                row.appendChild(cell);
+                tbody.appendChild(row);
+                return;
+            }
+            
+            vendasProcessadas.forEach(venda => {
+                const row = document.createElement('tr');
+                
+                // Data
+                const dataCell = document.createElement('td');
+                dataCell.textContent = venda.dataFormatada;
+                row.appendChild(dataCell);
+                
+                // Cliente
+                const clienteCell = document.createElement('td');
+                clienteCell.textContent = venda.cliente;
+                row.appendChild(clienteCell);
+                
+                // Movimentação
+                const movimentacaoCell = document.createElement('td');
+                movimentacaoCell.textContent = venda.movimentacao;
+                row.appendChild(movimentacaoCell);
+                
+                // Quantidade
+                const quantidadeCell = document.createElement('td');
+                quantidadeCell.textContent = venda.quantidade;
+                row.appendChild(quantidadeCell);
+                
+                // Total
+                const totalCell = document.createElement('td');
+                totalCell.textContent = formatarMoeda(venda.total);
+                row.appendChild(totalCell);
+                
+                // Custo
+                const custoCell = document.createElement('td');
+                custoCell.textContent = formatarMoeda(venda.custo);
+                row.appendChild(custoCell);
+                
+                // Lucro
+                const lucroCell = document.createElement('td');
+                lucroCell.textContent = formatarMoeda(venda.lucro);
+                row.appendChild(lucroCell);
+                
+                // Vendedor
+                const vendedorCell = document.createElement('td');
+                vendedorCell.textContent = venda.vendedor;
+                row.appendChild(vendedorCell);
+                
+                tbody.appendChild(row);
+            });
+            
+            // Adicionar busca
+            document.getElementById('busca-venda').addEventListener('input', function(e) {
+                const termo = e.target.value.toLowerCase();
+                const linhas = tbody.querySelectorAll('tr');
+                
+                linhas.forEach(linha => {
+                    const cliente = linha.cells[1].textContent.toLowerCase();
+                    const movimentacao = linha.cells[2].textContent.toLowerCase();
+                    if (cliente.includes(termo) || movimentacao.includes(termo)) {
+                        linha.style.display = '';
+                    } else {
+                        linha.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Função para formatar moeda
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            }).format(valor);
+        }
+        
+        // Função para carregar dados do localStorage
+        function carregarDadosLocais() {
+            try {
+                const vendasSalvas = localStorage.getItem('crm_vendas_data');
+                const clientesSalvos = localStorage.getItem('crm_clientes_data');
+                
+                if (vendasSalvas && clientesSalvos) {
+                    vendasProcessadas = JSON.parse(vendasSalvas);
+                    clientesProcessados = JSON.parse(clientesSalvos);
+                    
+                    // Converter strings de data para objetos Date
+                    vendasProcessadas.forEach(venda => {
+                        venda.data = new Date(venda.data);
+                    });
+                    
+                    clientesProcessados.forEach(cliente => {
+                        if (cliente.ultimaCompra) {
+                            cliente.ultimaCompra = new Date(cliente.ultimaCompra);
+                        }
+                    });
+                    
+                    log('Dados carregados do armazenamento local.', 'success');
+                    
+                    // Atualizar a interface
+                    atualizarDashboard();
+                    atualizarTabelaClientes();
+                    atualizarTabelaVendas();
+                }
+            } catch (error) {
+                log(`Erro ao carregar dados do armazenamento local: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>
